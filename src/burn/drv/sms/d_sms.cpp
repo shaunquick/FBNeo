@@ -29483,18 +29483,18 @@ struct BurnDriver BurnDrvsms_snake = {
 	256, 192, 4, 3
 };
 
-// Vexed (HB, v1.03)
+// Vexed (HB, v1.08)
 
 static struct BurnRomInfo sms_vexedRomDesc[] = {
-	{ "Vexed v1.03 (2021)(Under4Mhz).sms",	32768, 0xbd34d592, BRF_PRG | BRF_ESS },
+	{ "Vexed v1.08 (2023)(Under4Mhz).sms",	32768, 0x834e1138, BRF_PRG | BRF_ESS },
 };
 
 STD_ROM_PICK(sms_vexed)
 STD_ROM_FN(sms_vexed)
 
 struct BurnDriver BurnDrvsms_vexed = {
-	"sms_vexed", NULL, NULL, NULL, "2021",
-	"Vexed (HB, v1.03)\0", NULL, "Under4Mhz", "Sega Master System",
+	"sms_vexed", NULL, NULL, NULL, "2021-23",
+	"Vexed (HB, v1.08)\0", NULL, "Under4Mhz", "Sega Master System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_MASTER_SYSTEM, GBF_PUZZLE, 0,
 	SMSGetZipName, sms_vexedRomInfo, sms_vexedRomName, NULL, NULL, NULL, NULL, SMSInputInfo, SMSDIPInfo,
@@ -29597,18 +29597,18 @@ struct BurnDriver BurnDrvsms_iceforce = {
 	256, 192, 4, 3
 };
 
-// Klondike Solitaire (HB)
+// Klondike Solitaire (HB, v1.04)
 
 static struct BurnRomInfo sms_ksolitaireRomDesc[] = {
-	{ "Klondike Solitaire (2021)(Under4Mhz).sms",	49152, 0xa4011448, BRF_PRG | BRF_ESS },
+	{ "Klondike Solitaire v1.04 (2023)(Under4Mhz).sms",	49152, 0x52b870f3, BRF_PRG | BRF_ESS },
 };
 
 STD_ROM_PICK(sms_ksolitaire)
 STD_ROM_FN(sms_ksolitaire)
 
 struct BurnDriver BurnDrvsms_ksolitaire = {
-	"sms_ksolitaire", NULL, NULL, NULL, "2021",
-	"Klondike Solitaire (HB)\0", NULL, "Under4Mhz", "Sega Master System",
+	"sms_ksolitaire", NULL, NULL, NULL, "2023",
+	"Klondike Solitaire (HB, v1.04)\0", NULL, "Under4Mhz", "Sega Master System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_MASTER_SYSTEM, GBF_CASINO, 0,
 	SMSGetZipName, sms_ksolitaireRomInfo, sms_ksolitaireRomName, NULL, NULL, NULL, NULL, SMSInputInfo, SMSDIPInfo,
@@ -29635,18 +29635,18 @@ struct BurnDriver BurnDrvsms_kunkun2 = {
 	256, 192, 4, 3
 };
 
-// Mahjong Solitaire (HB)
+// Mahjong Solitaire (HB, v1.16)
 
 static struct BurnRomInfo sms_msolitaireRomDesc[] = {
-	{ "Mahjong Solitaire (2021)(Under4Mhz).sms",	32768, 0xbed37331, BRF_PRG | BRF_ESS },
+	{ "Mahjong Solitaire v1.16 (2023)(Under4Mhz).sms",	32768, 0xd4dc268e, BRF_PRG | BRF_ESS },
 };
 
 STD_ROM_PICK(sms_msolitaire)
 STD_ROM_FN(sms_msolitaire)
 
 struct BurnDriver BurnDrvsms_msolitaire = {
-	"sms_msolitaire", NULL, NULL, NULL, "2021",
-	"Mahjong Solitaire (HB)\0", NULL, "Under4Mhz", "Sega Master System",
+	"sms_msolitaire", NULL, NULL, NULL, "2023",
+	"Mahjong Solitaire (HB, v1.16)\0", NULL, "Under4Mhz", "Sega Master System",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_MASTER_SYSTEM, GBF_MAHJONG | GBF_PUZZLE, 0,
 	SMSGetZipName, sms_msolitaireRomInfo, sms_msolitaireRomName, NULL, NULL, NULL, NULL, SMSInputInfo, SMSDIPInfo,
@@ -30433,6 +30433,25 @@ struct BurnDriver BurnDrvsms_sutoroku = {
 	256, 192, 4, 3
 };
 
+// BitLogic a Cyberpunk Arcade Adventure (HB)
+
+static struct BurnRomInfo sms_bitlogicRomDesc[] = {
+	{ "Bitlogic MSX2SMS (2023)(OXiAB Studio).sms",	65536, 0x7145271f, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(sms_bitlogic)
+STD_ROM_FN(sms_bitlogic)
+
+struct BurnDriver BurnDrvsms_bitlogic = {
+	"sms_bitlogic", NULL, NULL, NULL, "2022-2023",
+	"BitLogic a Cyberpunk Arcade Adventure (HB)\0", NULL, "OXiAB Studio", "Sega Master System",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_MASTER_SYSTEM, GBF_PLATFORM | GBF_RUNGUN, 0,
+	SMSGetZipName, sms_bitlogicRomInfo, sms_bitlogicRomName, NULL, NULL, NULL, NULL, SMSInputInfo, SMSDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1E00,
+	256, 192, 4, 3
+};
+
 // Castle Escape (HB)
 
 static struct BurnRomInfo sms_castlescapeRomDesc[] = {
@@ -30562,6 +30581,44 @@ struct BurnDriver BurnDrvsms_whereisit = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_MASTER_SYSTEM, GBF_PUZZLE, 0,
 	SMSGetZipName, sms_whereisitRomInfo, sms_whereisitRomName, NULL, NULL, NULL, NULL, SMSInputInfo, SMSDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1E00,
+	256, 192, 4, 3
+};
+
+// Pegged (HB, v1.02)
+
+static struct BurnRomInfo gg_peggedRomDesc[] = {
+	{ "Pegged v1.02 (2023)(Under4Mhz).gg",	32768, 0xa3e06e7a, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(gg_pegged)
+STD_ROM_FN(gg_pegged)
+
+struct BurnDriver BurnDrvgg_pegged = {
+	"gg_pegged", NULL, NULL, NULL, "2023",
+	"Pegged (HB, v1.02)\0", NULL, "Under4Mhz", "Sega Game Gear",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_GAME_GEAR, GBF_PUZZLE, 0,
+	GGGetZipName, gg_peggedRomInfo, gg_peggedRomName, NULL, NULL, NULL, NULL, SMSInputInfo, GGDIPInfo,
+	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1E00,
+	256, 192, 4, 3
+};
+
+// Vexed (HB, v1.08)
+
+static struct BurnRomInfo gg_vexedRomDesc[] = {
+	{ "Vexed v1.08 (2023)(Under4Mhz).gg",	32768, 0x36e8fa84, BRF_PRG | BRF_ESS },
+};
+
+STD_ROM_PICK(gg_vexed)
+STD_ROM_FN(gg_vexed)
+
+struct BurnDriver BurnDrvgg_vexed = {
+	"gg_vexed", NULL, NULL, NULL, "2023",
+	"Vexed (HB, v1.08)\0", NULL, "Under4Mhz", "Sega Game Gear",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 1, HARDWARE_SEGA_GAME_GEAR, GBF_PUZZLE, 0,
+	GGGetZipName, gg_vexedRomInfo, gg_vexedRomName, NULL, NULL, NULL, NULL, SMSInputInfo, GGDIPInfo,
 	SMSInit, SMSExit, SMSFrame, SMSDraw, SMSScan, &SMSPaletteRecalc, 0x1E00,
 	256, 192, 4, 3
 };
