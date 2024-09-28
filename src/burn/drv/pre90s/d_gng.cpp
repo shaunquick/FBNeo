@@ -1,4 +1,4 @@
-// FB Alpha Ghosts'n Goblins driver module
+// FB Neo Ghosts'n Goblins driver module
 // Based on MAME driver by Pierpaolo Prazzoli
 
 #include "tiles_generic.h"
@@ -42,7 +42,7 @@ static UINT8 soundlatch;
 
 static INT32 nExtraCycles;
 
-static INT32 is_game = 0; // 0 gng+etc, 1 diamond
+static INT32 is_game = 0; // 0 gng+etc, 1 diamrun
 
 static struct BurnInputInfo GngInputList[] =
 {
@@ -73,7 +73,7 @@ static struct BurnInputInfo GngInputList[] =
 
 STDINPUTINFO(Gng)
 
-static struct BurnInputInfo DiamondInputList[] =
+static struct BurnInputInfo DiamrunInputList[] =
 {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy1 + 6,	"p1 coin"	},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 start"	},
@@ -93,7 +93,7 @@ static struct BurnInputInfo DiamondInputList[] =
 	{"Dip 3",			BIT_DIPSWITCH,	DrvDips + 2,	"dip"		},
 };
 
-STDINPUTINFO(Diamond)
+STDINPUTINFO(Diamrun)
 
 
 static struct BurnDIPInfo GngDIPList[]=
@@ -242,7 +242,7 @@ static struct BurnDIPInfo MakaimurDIPList[]=
 
 STDDIPINFO(Makaimur)
 
-static struct BurnDIPInfo DiamondDIPList[]=
+static struct BurnDIPInfo DiamrunDIPList[]=
 {
 	DIP_OFFSET(0x0a)
 	{0x00, 0xff, 0xff, 0x81, NULL					},
@@ -271,7 +271,7 @@ static struct BurnDIPInfo DiamondDIPList[]=
 	{0x00, 0x01, 0x80, 0x80, "Off"					},
 	{0x00, 0x01, 0x80, 0x00, "On"					},
 
-	{0   , 0xfe, 0   , 4   , "Energy Loss"			},
+	{0   , 0xfe, 0   , 16  , "Energy Loss"			},
 	{0x01, 0x01, 0x0f, 0x00, "Slowest"				},
 	{0x01, 0x01, 0x0f, 0x01, "-6 Slower"			},
 	{0x01, 0x01, 0x0f, 0x02, "-5 Slower"			},
@@ -296,7 +296,7 @@ static struct BurnDIPInfo DiamondDIPList[]=
 	{0x01, 0x01, 0x30, 0x30, "x4"					},
 };
 
-STDDIPINFO(Diamond)
+STDDIPINFO(Diamrun)
 
 static void calc_color(INT32 index); // forward
 
@@ -331,7 +331,7 @@ static UINT8 main_read(UINT16 address)
 	}
 
 	if (address >= 0x3005 && address <= 0x33ff)
-		return 0; // nop (diamond)
+		return 0; // nop (diamrun)
 
 	bprintf(0, _T("mr %X\n"), address);
 
@@ -521,7 +521,7 @@ static INT32 DrvGfxDecode()
 }
 
 
-static INT32 DrvCommonInit(INT32 game) // 0 = gng, 1 = gnga, 2 = diamond
+static INT32 DrvCommonInit(INT32 game) // 0 = gng, 1 = gnga, 2 = diamrun
 {
 	BurnAllocMemIndex();
 
@@ -581,7 +581,7 @@ static INT32 DrvCommonInit(INT32 game) // 0 = gng, 1 = gnga, 2 = diamond
 			if (BurnLoadRom(DrvSprites + 0x00000, 12, 1)) return 1;
 			if (BurnLoadRom(DrvSprites + 0x10000, 13, 1)) return 1;
 
-			DrvM6809ROM[0x2000] = 0x00; // crash patch (diamond)
+			DrvM6809ROM[0x2000] = 0x00; // crash patch (diamrun)
 		}
 
 		DrvGfxDecode();
@@ -647,7 +647,7 @@ static INT32 GngaInit()
 	return DrvCommonInit(1);
 }
 
-static INT32 DiamondInit()
+static INT32 DiamrunInit()
 {
 	is_game = 1;
 	return DrvCommonInit(2);
@@ -1145,7 +1145,7 @@ STD_ROM_FN(Gngc)
 
 struct BurnDriver BurnDrvGngc = {
 	"gngc", "gng", NULL, NULL, "1985",
-	"Ghosts'n Goblins (World Revision C)\0", NULL, "Capcom", "Miscellaneous",
+	"Ghosts'n Goblins (World? set 3)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_RUNGUN, 0,
 	NULL, GngcRomInfo, GngcRomName, NULL, NULL, NULL, NULL, GngInputInfo, GngDIPInfo,
@@ -1186,7 +1186,7 @@ STD_ROM_FN(Makaimur)
 
 struct BurnDriver BurnDrvMakaimur = {
 	"makaimur", "gng", NULL, NULL, "1985",
-	"Makai-Mura (Japan)\0", NULL, "Capcom", "Miscellaneous",
+	"Makaimura (Japan)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_RUNGUN, 0,
 	NULL, MakaimurRomInfo, MakaimurRomName, NULL, NULL, NULL, NULL, GngInputInfo, MakaimurDIPInfo,
@@ -1227,7 +1227,7 @@ STD_ROM_FN(Makaimuc)
 
 struct BurnDriver BurnDrvMakaimuc = {
 	"makaimurc", "gng", NULL, NULL, "1985",
-	"Makai-Mura (Japan revision C)\0", NULL, "Capcom", "Miscellaneous",
+	"Makaimura (Japan Revision C)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_RUNGUN, 0,
 	NULL, MakaimucRomInfo, MakaimucRomName, NULL, NULL, NULL, NULL, GngInputInfo, MakaimurDIPInfo,
@@ -1268,7 +1268,7 @@ STD_ROM_FN(Makaimug)
 
 struct BurnDriver BurnDrvMakaimug = {
 	"makaimurg", "gng", NULL, NULL, "1985",
-	"Makai-Mura (Japan revision G)\0", NULL, "Capcom", "Miscellaneous",
+	"Makaimura (Japan Revision G)\0", NULL, "Capcom", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_RUNGUN, 0,
 	NULL, MakaimugRomInfo, MakaimugRomName, NULL, NULL, NULL, NULL, GngInputInfo, MakaimurDIPInfo,
@@ -1277,7 +1277,7 @@ struct BurnDriver BurnDrvMakaimug = {
 };
 
 
-static struct BurnRomInfo DiamondRomDesc[] = {
+static struct BurnRomInfo DiamrunRomDesc[] = {
 	{ "d3o",           0x04000, 0xba4bf9f1, BRF_ESS | BRF_PRG }, //  0	M6809 Program Code
 	{ "d3",            0x08000, 0xf436d6fa, BRF_ESS | BRF_PRG }, //	 1
 	{ "d5o",           0x08000, 0xae58bd3a, BRF_ESS | BRF_PRG }, //	 2
@@ -1301,15 +1301,15 @@ static struct BurnRomInfo DiamondRomDesc[] = {
 	{ "prom2",         0x00100, 0x4a1285a4, BRF_GRA | BRF_OPT },	     //  15
 };
 
-STD_ROM_PICK(Diamond)
-STD_ROM_FN(Diamond)
+STD_ROM_PICK(Diamrun)
+STD_ROM_FN(Diamrun)
 
-struct BurnDriver BurnDrvDiamond = {
-	"diamond", NULL, NULL, NULL, "1985",
+struct BurnDriver BurnDrvDiamrun = {
+	"diamrun", NULL, NULL, NULL, "1985",
 	"Diamond Run\0", NULL, "KH Video", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARWARE_CAPCOM_MISC, GBF_PLATFORM, 0,
-	NULL, DiamondRomInfo, DiamondRomName, NULL, NULL, NULL, NULL, DiamondInputInfo, DiamondDIPInfo,
-	DiamondInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
+	NULL, DiamrunRomInfo, DiamrunRomName, NULL, NULL, NULL, NULL, DiamrunInputInfo, DiamrunDIPInfo,
+	DiamrunInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x100,
 	256, 224, 4, 3
 };

@@ -173,10 +173,6 @@ static struct BurnDIPInfo FirebarrDIPList[]=
 	{0x15, 0x01, 0x03, 0x02, "4"							},
 	{0x15, 0x01, 0x03, 0x01, "5"							},
 
-	{0   , 0xfe, 0   ,    2, "Allow Continue"				},
-	{0x15, 0x01, 0x20, 0x00, "No"							},
-	{0x15, 0x01, 0x20, 0x20, "Yes"							},
-
 	{0   , 0xfe, 0   ,    2, "Demo Sounds"					},
 	{0x15, 0x01, 0x40, 0x40, "Off"							},
 	{0x15, 0x01, 0x40, 0x00, "On"							},
@@ -1469,7 +1465,7 @@ STD_ROM_PICK(kftgoal)
 STD_ROM_FN(kftgoal)
 
 struct BurnDriverD BurnDrvKftgoal = {
-	"kftgoal", "wpksoc", NULL, NULL, "1995",
+	"kftgoal", "wpksoc", NULL, NULL, "1994",
 	"Kick for the Goal\0", NULL, "Jaleco", "Irem M107",
 	NULL, NULL, NULL, NULL,
 	BDF_CLONE, 4, HARDWARE_IREM_MISC, GBF_SPORTSFOOTBALL, 0,

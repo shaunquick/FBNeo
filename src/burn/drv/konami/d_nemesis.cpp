@@ -2085,7 +2085,7 @@ static UINT8 __fastcall salamand_sound_read(UINT16 address)
 			return BurnYM2151Read();
 
 		case 0xe000:
-			return nCurrentFrame & 1;
+			return vlm5030_bsy(0);
 	}
 
 	return 0;
@@ -2515,7 +2515,7 @@ static void CitybombSoundInit()
 	ZetClose();
 
 	BurnYM3812Init(1, 3579545, NULL, DrvSynchroniseStream, 0);
-	BurnTimerAttachYM3812(&ZetConfig, 3579545);
+	BurnTimerAttach(&ZetConfig, 3579545);
 	BurnYM3812SetRoute(0, BURN_SND_YM3812_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 
 	K007232Init(0,  3579545, K007232ROM, 0x80000);
@@ -2663,16 +2663,27 @@ static INT32 SalamandInit()
 	BurnAllocMemIndex();
 
 	{
-		if (BurnLoadRom(Drv68KROM + 0x000001,  0, 2)) return 1;
-		if (BurnLoadRom(Drv68KROM + 0x000000,  1, 2)) return 1;
-		if (BurnLoadRom(Drv68KROM + 0x040001,  2, 2)) return 1;
-		if (BurnLoadRom(Drv68KROM + 0x040000,  3, 2)) return 1;
+		INT32 nIndex = 0;
 
-		if (BurnLoadRom(DrvZ80ROM + 0x000000,  4, 1)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x000001, nIndex++, 2)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x000000, nIndex++, 2)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x040001, nIndex++, 2)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x040000, nIndex++, 2)) return 1;
 
-		if (BurnLoadRom(DrvVLMROM + 0x000000,  5, 1)) return 1;
+		if (0 == strcmp(BurnDrvGetTextA(DRV_NAME), "salamandt")) {
+			if (BurnLoadRom(Drv68KROM + 0x060001, nIndex++, 2)) return 1;
+			if (BurnLoadRom(Drv68KROM + 0x060000, nIndex++, 2)) return 1;
+		}
 
-		if (BurnLoadRom(K007232ROM + 0x00000,  6, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM + 0x000000, nIndex++, 1)) return 1;
+
+		if (BurnLoadRom(DrvVLMROM + 0x000000, nIndex++, 1)) return 1;
+
+		if (BurnLoadRom(K007232ROM + 0x00000, nIndex++, 1)) return 1;
+
+		if (0 == strcmp(BurnDrvGetTextA(DRV_NAME), "salamandt")) {
+			if (BurnLoadRom(K007232ROM + 0x10000, nIndex++, 1)) return 1;
+		}
 	}
 
 	SekInit(0, 0x68000);
@@ -3589,11 +3600,10 @@ static INT32 SalamandFrame()
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
-	INT32 nCyclesDone[2] = { nCyclesExtra[0], nCyclesExtra[1] };
+	INT32 nCyclesDone[2] = { nCyclesExtra[0], 0 };
 
 	SekOpen(0);
 	ZetOpen(0);
-	ZetIdle(nCyclesExtra[1]);
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -3614,7 +3624,6 @@ static INT32 SalamandFrame()
 	SekClose();
 
 	nCyclesExtra[0] = nCyclesDone[0] - nCyclesTotal[0];
-	nCyclesExtra[1] = ZetTotalCycles(0) - nCyclesTotal[1];
 
 	if (pBurnDraw) {
 		DrvDraw();
@@ -3652,11 +3661,10 @@ static INT32 HcrashFrame()
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 6144000 / 60, 3579545 / 60 };
-	INT32 nCyclesDone[2] = { nCyclesExtra[0], nCyclesExtra[1] };
+	INT32 nCyclesDone[2] = { nCyclesExtra[0], 0 };
 
 	SekOpen(0);
 	ZetOpen(0);
-	ZetIdle(nCyclesExtra[1]);
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -3681,7 +3689,6 @@ static INT32 HcrashFrame()
 	SekClose();
 
 	nCyclesExtra[0] = nCyclesDone[0] - nCyclesTotal[0];
-	nCyclesExtra[1] = ZetTotalCycles(0) - nCyclesTotal[1];
 
 	if (pBurnDraw) {
 		DrvDraw();
@@ -3719,11 +3726,10 @@ static INT32 BlkpnthrFrame()
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
-	INT32 nCyclesDone[2] = { nCyclesExtra[0], nCyclesExtra[1] };
+	INT32 nCyclesDone[2] = { nCyclesExtra[0], 0 };
 
 	SekOpen(0);
 	ZetOpen(0);
-	ZetIdle(nCyclesExtra[1]);
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -3744,7 +3750,6 @@ static INT32 BlkpnthrFrame()
 	SekClose();
 
 	nCyclesExtra[0] = nCyclesDone[0] - nCyclesTotal[0];
-	nCyclesExtra[1] = ZetTotalCycles(0) - nCyclesTotal[1];
 
 	if (pBurnDraw) {
 		DrvDraw();
@@ -3868,11 +3873,10 @@ static INT32 CitybombFrame()
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[2] = { 9216000 / 60, 3579545 / 60 };
-	INT32 nCyclesDone[2] = { nCyclesExtra[0], nCyclesExtra[1] };
+	INT32 nCyclesDone[2] = { nCyclesExtra[0], 0 };
 
 	SekOpen(0);
 	ZetOpen(0);
-	ZetIdle(nCyclesExtra[1]);
 
 	for (INT32 i = 0; i < nInterleave; i++)
 	{
@@ -3881,7 +3885,7 @@ static INT32 CitybombFrame()
 		if (*m68k_irq_enable && (i == nInterleave - 1))
 			SekSetIRQLine(1, CPU_IRQSTATUS_AUTO);
 
-		CPU_RUN_TIMER_YM3812(1);
+		CPU_RUN_TIMER(1);
 	}
 
 	if (pBurnSoundOut) {
@@ -3894,7 +3898,6 @@ static INT32 CitybombFrame()
 	ZetClose();
 
 	nCyclesExtra[0] = nCyclesDone[0] - nCyclesTotal[0];
-	nCyclesExtra[1] = ZetTotalCycles(0) - nCyclesTotal[1];
 
 	if (pBurnDraw) {
 		DrvDraw();
@@ -4103,6 +4106,42 @@ struct BurnDriver BurnDrvSalamandj = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_HORSHOOT, 0,
 	NULL, salamandjRomInfo, salamandjRomName, NULL, NULL, NULL, NULL, SalamandInputInfo, SalamandDIPInfo,
+	SalamandInit, DrvExit, SalamandFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
+	256, 224, 4, 3
+};
+
+
+// Salamander (Tecfri license)
+// Original Konami PCBs PWB (B) 201012A GX587 + GX400PWD(A)200204C
+
+static struct BurnRomInfo salamandtRomDesc[] = {
+	// Same program ROMs content as 'salamand', but with smaller ROMs
+	{ "5_27512.18b",			0x10000, 0xa42297f9, 1 | BRF_PRG | BRF_ESS }, //  0 m68000 Code
+	{ "6_27512.18c",			0x10000, 0xf9130b0a, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "10_27512.17b",			0x10000, 0xb83e8724, 1 | BRF_PRG | BRF_ESS }, //  2
+	{ "4_27512.17c",			0x10000, 0xa6ef6dc4, 1 | BRF_PRG | BRF_ESS }, //  3
+	{ "9_27512.17b",			0x10000, 0xb4d2fec9, 1 | BRF_PRG | BRF_ESS }, //  4
+	{ "587-c06.17c",			0x10000, 0x6ea59643, 1 | BRF_PRG | BRF_ESS }, //  5
+
+	{ "2_tmm24256ap.11j",		0x08000, 0x7eb8bb88, 2 | BRF_PRG | BRF_ESS }, //  6 Z80 Code
+
+	{ "1_27128.8g",				0x04000, 0xf9ac6b82, 4 | BRF_SND },           //  7 VLM5030 Samples
+
+	{ "8_27512.10a",			0x10000, 0xcf477da4, 5 | BRF_SND },           //  8 K007232 Samples
+	{ "7_27512.10a",			0x10000, 0x52384e79, 5 | BRF_SND },           //  9
+
+	{ "007366_pal8l14a.19d",	0x00020, 0x77304735, 0 | BRF_OPT },           // 10
+};
+
+STD_ROM_PICK(salamandt)
+STD_ROM_FN(salamandt)
+
+struct BurnDriver BurnDrvsalamandt = {
+	"salamandt", "salamand", NULL, NULL, "1986",
+	"Salamander (Tecfri license)\0", NULL, "Konami (Tecfri license)", "GX587",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_HORSHOOT, 0,
+	NULL, salamandtRomInfo, salamandtRomName, NULL, NULL, NULL, NULL, SalamandInputInfo, SalamandDIPInfo,
 	SalamandInit, DrvExit, SalamandFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	256, 224, 4, 3
 };
@@ -4370,8 +4409,8 @@ struct BurnDriver BurnDrvCitybombj = {
 // Kitten Kaboodle
 
 static struct BurnRomInfo kittenkRomDesc[] = {
-	{ "kitten.15k",		0x10000, 0x8267cb2b, 1 | BRF_PRG | BRF_ESS }, //  0 m68000 Code
-	{ "kitten.15h",		0x10000, 0xeb41cfa5, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "712-b10.15k",	0x10000, 0x8267cb2b, 1 | BRF_PRG | BRF_ESS }, //  0 m68000 Code
+	{ "712-b09.15h",	0x10000, 0xeb41cfa5, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "712-b08.15f",	0x20000, 0xe6d71611, 1 | BRF_PRG | BRF_ESS }, //  2
 	{ "712-b07.15d",	0x20000, 0x30f75c9f, 1 | BRF_PRG | BRF_ESS }, //  3
 
@@ -4527,10 +4566,10 @@ STDROMPICKEXT(gradiusb, gradiusb, bubsys)
 STD_ROM_FN(gradiusb)
 
 struct BurnDriver BurnDrvGradiusb = {
-	"gradiusb", "nemesis", "bubsys", NULL, "1985",
+	"gradiusb", NULL, "bubsys", NULL, "1985",
 	"Gradius (Bubble System)\0", NULL, "Konami", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_HORSHOOT, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_HORSHOOT, 0,
 	NULL, gradiusbRomInfo, gradiusbRomName, NULL, NULL, NULL, NULL, BubsysInputInfo, BubsysDIPInfo,
 	BubsysInit, DrvExit, Gx400Frame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	256, 224, 4, 3
@@ -4556,10 +4595,10 @@ STD_ROM_PICK(twinbeeb)
 STD_ROM_FN(twinbeeb)
 
 struct BurnDriver BurnDrvTwinbeeb = {
-	"twinbeeb", "twinbee", NULL, NULL, "1985",
+	"twinbeeb", NULL, NULL, NULL, "1985",
 	"TwinBee (Bubble System)\0", NULL, "Konami", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_VERSHOOT, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_KONAMI_68K_Z80, GBF_VERSHOOT, 0,
 	NULL, twinbeebRomInfo, twinbeebRomName, NULL, NULL, NULL, NULL, BubsysInputInfo, BubsysDIPInfo,
 	TwinbeebInit, DrvExit, Gx400Frame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	224, 256, 3, 4

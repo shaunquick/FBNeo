@@ -424,7 +424,7 @@ static void __fastcall MegadriveZ80ProgWrite(UINT16 a, UINT8 d); // forward
 
 static void __fastcall Megadrive68K_Z80WriteByte(UINT32 address, UINT8 data)
 { // a00000 - a0ffff: 68k -> z80 bus interface
-	if (Z80HasBus && MegadriveZ80Reset) {
+	if (Z80HasBus && !MegadriveZ80Reset) {
 		bprintf(0, _T("Megadrive68K_Z80WriteByte(%x, %x): w/o bus!\n"), address, data);
 		return;
 	}
@@ -446,7 +446,7 @@ static void __fastcall Megadrive68K_Z80WriteByte(UINT32 address, UINT8 data)
 
 static UINT8 __fastcall Megadrive68K_Z80ReadByte(UINT32 address)
 { // a00000 - a0ffff: 68k -> z80 bus interface
-	if (Z80HasBus && MegadriveZ80Reset) {
+	if (Z80HasBus && !MegadriveZ80Reset) {
 		bprintf(0, _T("Megadrive68K_Z80ReadByte(%x): w/o bus!\n"), address);
 		return 0;
 	}
@@ -1880,26 +1880,30 @@ static void __fastcall LK3WriteWord(UINT32 address, UINT16 data)
 	SEK_DEF_WRITE_WORD(7, address, data);
 }
 
-static UINT8 __fastcall RedclifProtReadByte(UINT32 /*sekAddress*/)
+static UINT8 __fastcall RedclifProtReadByte(UINT32 sekAddress)
 {
+	//bprintf(PRINT_NORMAL, _T("RedclifeProt Read byte %x  pc %x\n"), sekAddress, SekGetPC(-1));
+
 	return (UINT8)-0x56;
 }
 
 static UINT16 __fastcall RedclifProtReadWord(UINT32 sekAddress)
 {
-	bprintf(PRINT_NORMAL, _T("RedclifeProt Read Word %x\n"), sekAddress);
+	bprintf(PRINT_NORMAL, _T("RedclifeProt Read word %x  pc %x\n"), sekAddress, SekGetPC(-1));
 
 	return 0;
 }
 
-static UINT8 __fastcall RedclifProt2ReadByte(UINT32 /*sekAddress*/)
+static UINT8 __fastcall RedclifProt2ReadByte(UINT32 sekAddress)
 {
+	//bprintf(PRINT_NORMAL, _T("RedclifeProt2 Read byte %x  pc %x\n"), sekAddress, SekGetPC(-1));
+
 	return 0x55;
 }
 
 static UINT16 __fastcall RedclifProt2ReadWord(UINT32 sekAddress)
 {
-	bprintf(PRINT_NORMAL, _T("RedclifeProt2 Read Word %x\n"), sekAddress);
+	bprintf(PRINT_NORMAL, _T("RedclifeProt2 Read word %x  pc %x\n"), sekAddress, SekGetPC(-1));
 
 	return 0;
 }
@@ -2515,13 +2519,16 @@ static void SetupCustomCartridgeMappers()
 	}
 
 	if ((BurnDrvGetHardwareCode() & 0xff) == HARDWARE_SEGA_MEGADRIVE_PCB_REDCL_EN) {
-		OriginalRom = (UINT8*)BurnMalloc(0x200005);
-		memcpy(OriginalRom, RomMain, 0x200005);
-		for (UINT32 i = 0; i < RomSize; i++) {
-			OriginalRom[i] ^= 0x40;
-		}
+		if (RomSize == 0x200005) {
+			bprintf(0, _T("Redcliff - decrypting rom\n"));
+			OriginalRom = (UINT8*)BurnMalloc(0x200005);
+			memcpy(OriginalRom, RomMain, 0x200005);
+			for (UINT32 i = 0; i < RomSize; i++) {
+				OriginalRom[i] ^= 0x40;
+			}
 
-		memcpy(RomMain + 0x000000, OriginalRom + 0x000004, 0x200000);
+			memcpy(RomMain + 0x000000, OriginalRom + 0x000004, 0x200000);
+		}
 
 		SekOpen(0);
 		SekMapHandler(7, 0x400000, 0x400001, MAP_READ);
@@ -3209,6 +3216,16 @@ static void MegadriveSetupSRAM()
 static INT32 __fastcall MegadriveTAScallback(void)
 {
 	return 0; // disable
+}
+
+
+INT32 MegadriveInitNoDebug()
+{
+	INT32 rc = MegadriveInit();
+
+	bNoDebug = 1;
+
+	return rc;
 }
 
 INT32 MegadriveInit()
@@ -4658,6 +4675,9 @@ INT32 MegadriveFrame()
 	SekRunM68k(CYCLES_M68K_ASD);
 
 	for (INT32 y=0; y<lines; y++) {
+
+		if (y > lines_vis && nBurnCPUSpeedAdjust > 0x100)
+			SekRunM68k((INT32)((INT64)CYCLES_M68K_LINE * (nBurnCPUSpeedAdjust - 0x100) / 0x0100));
 
 		Scanline = y;
 

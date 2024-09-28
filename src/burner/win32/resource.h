@@ -211,6 +211,7 @@
 #define IDC_LAYER3							20204
 #define IDC_LAYER4							20205
 #define IDC_SHOW							20206
+#define IDC_SHOTKEEP						20207
 
 #define IDC_LENGTH                      20255
 #define IDC_FRAMES                      20256
@@ -224,6 +225,7 @@
 #define IDC_REPLAYTIME                  20264
 #define IDC_SHOWMOVEMENT                20265
 #define IDC_STARTPAUSED                 20266
+#define IDC_NGCD_WARN                   20267
 
 #define IDC_STATIC_SYS                  	20300
 #define IDC_STATIC_OPT                  	20301
@@ -466,6 +468,7 @@
 #define MENU_RESETCPUCLOCK					10011
 #define MENU_EXIT                       	10012
 #define MENU_RESET                       	10013
+#define MENU_LOAD_ROMDATA					10014
 #define MENU_MEMCARD_CREATE					10020
 #define MENU_MEMCARD_SELECT					10021
 #define MENU_MEMCARD_INSERT					10022
@@ -478,8 +481,9 @@
 #define MENU_STATE_PREVSLOT             	10034
 #define MENU_STATE_NEXTSLOT             	10035
 #define MENU_ALLRAM                     	10036
-#define MENU_STATE_UNDO                         10037
+#define MENU_STATE_UNDO                     10037
 #define MENU_TRIPLE                     	10100
+#define MENU_WINFS                          10101
 #define MENU_FULL                       	10102
 #define MENU_DWMFIX							10103
 #define MENU_NOSTRETCH                  	10110
@@ -640,6 +644,7 @@
 #define MENU_VIDEOVSYNC						10646
 #define MENU_MONITORAUTOCHECK				10650
 #define MENU_CLRMAME_PRO_XML				10651
+#define MENU_CLRMAME_PRO_XML_NEOGEO_ONLY	10652
 #define MENU_CLRMAME_PRO_XML_MD_ONLY		10653
 #define MENU_SAVEHISCORES					10654
 #define MENU_AUD_PLUGIN_1					10655

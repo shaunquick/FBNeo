@@ -1,4 +1,4 @@
-// FB Alpha asteroids driver module
+// FB Neo asteroids driver module
 // Based on MAME driver by Brad Oliver, Bernd Wiebelt, Allard van der Bas
 
 #include "tiles_generic.h"
@@ -890,12 +890,7 @@ static INT32 DrvLoadRoms(INT32 pOffset, INT32 vOffset)
 
 static INT32 AsteroidInit()
 {
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	if (DrvLoadRoms(0x6800, 0x0800)) return 1;
 
@@ -924,12 +919,7 @@ static INT32 AsteroidInit()
 
 static INT32 AstdeluxInit()
 {
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	if (DrvLoadRoms(0x6000, 0)) return 1;
 
@@ -966,12 +956,7 @@ static INT32 AstdeluxInit()
 
 static INT32 LlanderInit()
 {
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	if (DrvLoadRoms(0x6000, 0)) return 1;
 
@@ -1008,7 +993,7 @@ static INT32 DrvExit()
 	asteroid_sound_exit();
 	llander_sound_exit();
 
-	BurnFree(AllMem);
+	BurnFreeMemIndex();
 
 	if (astdelux) {
 		earom_exit();
@@ -1385,6 +1370,33 @@ struct BurnDriver BurnDrvAerolitos = {
 };
 
 
+// Aerolitos Espaciales (Spanish bootleg of Asteroids)
+// Pasatiempos Laguna bootleg on Rodmar PCB
+
+static struct BurnRomInfo aerolitolRomDesc[] = {
+	{ "aerolito.1e",		0x0800, 0x0cc75459, 1 | BRF_PRG | BRF_ESS }, //  0 M6502 Code
+	{ "aerolito.1d",		0x0800, 0x096ed35c, 1 | BRF_PRG | BRF_ESS }, //  1
+	{ "aerolito.1c",		0x0800, 0xb912754d, 1 | BRF_PRG | BRF_ESS }, //  2
+
+	{ "aerolito.3n",		0x0800, 0x541e8ad4, 2 | BRF_PRG | BRF_ESS }, //  3 Vector ROM
+
+	{ "034602-01.c8",		0x0100, 0x97953db8, 3 | BRF_GRA },           //  4 DVG PROM
+};
+
+STD_ROM_PICK(aerolitol)
+STD_ROM_FN(aerolitol)
+
+struct BurnDriver BurnDrvAerolitol = {
+	"aerolitol", "asteroid", NULL, NULL, "1980",
+	"Aerolitos Espaciales (Spanish bootleg of Asteroids)\0", NULL, "bootleg (Pasatiempos Laguna)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
+	NULL, aerolitolRomInfo, aerolitolRomName, NULL, NULL, NULL, NULL, AsteroidInputInfo, AerolitosDIPInfo,
+	AsteroidInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
+	640, 480, 4, 3
+};
+
+
 // Asterock (Sidam bootleg of Asteroids)
 
 static struct BurnRomInfo asterockRomDesc[] = {
@@ -1599,6 +1611,9 @@ struct BurnDriver BurnDrvHyperspc = {
 	640, 480, 4, 3
 };
 
+// note: the astdelux entry in hiscore.dat breaks the game and seems wrong (the 3rd area is saving game timers ?),
+//       for that reason and also because it is unnecessary (the hiscores are persisted through nvram anyway),
+//       we prefer keeping the BDF_HISCORE_SUPPORTED flag disabled
 
 // Asteroids Deluxe (rev 3)
 
@@ -1621,7 +1636,7 @@ struct BurnDriver BurnDrvAstdelux = {
 	"astdelux", NULL, NULL, NULL, "1980",
 	"Asteroids Deluxe (rev 3)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
+	BDF_GAME_WORKING /* | BDF_HISCORE_SUPPORTED */, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
 	NULL, astdeluxRomInfo, astdeluxRomName, NULL, NULL, NULL, NULL, AstdeluxInputInfo, AstdeluxDIPInfo,
 	AstdeluxInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3
@@ -1648,7 +1663,7 @@ struct BurnDriver BurnDrvAstdelux2 = {
 	"astdelux2", "astdelux", NULL, NULL, "1980",
 	"Asteroids Deluxe (rev 2)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
+	BDF_GAME_WORKING | BDF_CLONE /* | BDF_HISCORE_SUPPORTED */, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
 	NULL, astdelux2RomInfo, astdelux2RomName, NULL, NULL, NULL, NULL, AstdeluxInputInfo, AstdeluxDIPInfo,
 	AstdeluxInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3
@@ -1676,7 +1691,7 @@ struct BurnDriver BurnDrvAstdelux1 = {
 	"astdelux1", "astdelux", NULL, NULL, "1980",
 	"Asteroids Deluxe (rev 1)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
+	BDF_GAME_WORKING | BDF_CLONE /* | BDF_HISCORE_SUPPORTED */, 2, HARDWARE_MISC_PRE90S, GBF_SHOOT | GBF_VECTOR, 0,
 	NULL, astdelux1RomInfo, astdelux1RomName, NULL, NULL, NULL, NULL, AstdeluxInputInfo, AstdeluxDIPInfo,
 	AstdeluxInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3
@@ -1705,7 +1720,7 @@ struct BurnDriver BurnDrvLlander = {
 	"llander", NULL, NULL, NULL, "1979",
 	"Lunar Lander (rev 2)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC | GBF_VECTOR, 0,
+	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_ACTION | GBF_VECTOR, 0,
 	NULL, llanderRomInfo, llanderRomName, NULL, NULL, NULL, NULL, LlanderInputInfo, LlanderDIPInfo,
 	LlanderInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3
@@ -1734,7 +1749,7 @@ struct BurnDriver BurnDrvLlander1 = {
 	"llander1", "llander", NULL, NULL, "1979",
 	"Lunar Lander (rev 1)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC | GBF_VECTOR, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_ACTION | GBF_VECTOR, 0,
 	NULL, llander1RomInfo, llander1RomName, NULL, NULL, NULL, NULL, LlanderInputInfo, Llander1DIPInfo,
 	LlanderInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3
@@ -1762,7 +1777,7 @@ struct BurnDriverD BurnDrvLlandert = {
 	"llandert", "llander", NULL, NULL, "1979",
 	"Lunar Lander (screen test)\0", NULL, "Atari", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MISC | GBF_VECTOR, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_ACTION | GBF_VECTOR, 0,
 	NULL, llandertRomInfo, llandertRomName, NULL, NULL, NULL, NULL, LlandertInputInfo, LlandertDIPInfo,
 	LlanderInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x2000,
 	640, 480, 4, 3

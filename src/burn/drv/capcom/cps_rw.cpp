@@ -15,7 +15,7 @@ CPSINPSET
 UINT16 CpsInp055 = 0;
 UINT16 CpsInp05d = 0;
 UINT8 CpsDigUD[4] = {0, 0, 0, 0};
-static INT32 nDial055, nDial05d;
+INT32 nDial055, nDial05d;
 
 // puzloop paddles
 INT16 CpsInpPaddle1 = 0;
@@ -38,7 +38,6 @@ INT32 Forgottn = 0;
 INT32 Cps1QsHack = 0;
 INT32 Kodh = 0;
 INT32 Cawingb = 0;
-INT32 Wofh = 0;
 INT32 Sf2thndr = 0;
 INT32 Pzloop2 = 0;
 INT32 Hkittymp = 0;
@@ -46,6 +45,15 @@ INT32 Ssf2tb = 0;
 INT32 Dinohunt = 0;
 INT32 Port6SoundWrite = 0;
 INT32 CpsBootlegEEPROM = 0;
+INT32 Cps2Turbo = 0;
+INT32 Jurassic99 = 0;
+INT32 Dinoh = 0;
+INT32 Wofhfh = 0;
+INT32 Wofsgzb = 0;
+INT32 Wof3js = 0;
+INT32 Knightsh = 0;
+
+ClearOpposite<4, UINT8> clear_opposite;
 
 CpsRWSoundCommandCallback CpsRWSoundCommandCallbackFunction = NULL;
 
@@ -86,6 +94,8 @@ void CpsRwScan()
 		SCAN_VAR(nPrevInp000);
 		SCAN_VAR(nPrevInp001);
 	}
+
+	clear_opposite.scan();
 
 	SCAN_VAR(n664001);
 	SCAN_VAR(nCalc);
@@ -310,16 +320,16 @@ static UINT8 CpsReadPort(const UINT32 ia)
 		// Forgotten Worlds Dial
 		if (Forgottn) {
 			if (ia == 0x053) {
-				return (nDial055 >>  8) & 0xFF;
+				return (nDial055 >> 0) & 0xff;
 			}
 			if (ia == 0x055) {
-				return (nDial055 >> 16) & 0xFF;
+				return (nDial055 >> 8) & 0x0f;
 			}
 			if (ia == 0x05B) {
-				return (nDial05d >>  8) & 0xFF;
+				return (nDial05d >> 0) & 0xff;
 			}
 			if (ia == 0x05D) {
-				return (nDial05d >> 16) & 0xFF;
+				return (nDial05d >> 8) & 0x0f;
 			}
 		}	
 	}
@@ -456,9 +466,20 @@ void __fastcall CpsWriteByte(UINT32 a,UINT8 d)
 	
 	if (Cps == 2) {
 		// 0x400000 registers
-		if ((a & 0xFFFFF0) == 0x400000)	{
-			CpsFrg[a & 0x0F] = d;
-			return;
+		if (Cps2Turbo) {
+			if ((a & 0xFFFFF0) == 0x665000)	{
+				CpsFrg[a & 0x0F] = d;
+				return;
+			}
+			if ((a & 0xFFFFF0) == 0xfffff0)	{
+				CpsFrg[a & 0x0F] = d;
+				return;
+			}
+		} else {
+			if ((a & 0xFFFFF0) == 0x400000)	{
+				CpsFrg[a & 0x0F] = d;
+				return;
+			}
 		}
 		if ((a & 0xFF8000) == 0x660000) {
 			if (a == 0x664001) {
@@ -494,7 +515,7 @@ UINT16 __fastcall CpsReadWord(UINT32 a)
 	}
 	
 //	bprintf(PRINT_NORMAL, _T("Read Word %x\n"), a);
-	
+
 	SEK_DEF_READ_WORD(0, a);
 }
 
@@ -547,16 +568,6 @@ INT32 CpsRwExit()
 	return 0;
 }
 
-inline static void StopOpposite(UINT8* pInput)
-{
-	if ((*pInput & 0x03) == 0x03) {
-		*pInput &= ~0x03;
-	}
-	if ((*pInput & 0x0C) == 0x0C) {
-		*pInput &= ~0x0C;
-	}
-}
-
 INT32 CpsRwGetInp()
 {
 	// Compile separate buttons into Inpxxx
@@ -573,22 +584,27 @@ INT32 CpsRwGetInp()
 	CPSINPEX
 #undef INP
 
+	if (Jurassic99)
+		Inpc001 |= (CpsInp179[0] & 1) << 7;
+	if (Wofsgzb)
+		Inpc001 |= (CpsInp179[0] & 1) << 6;
+	if (Dinoh)
+		Inp177  |= (CpsInp179[0] & 1) << 7;
+	if (Wofhfh || Wof3js || Knightsh)
+		Inp177  |= (CpsInp179[0] & 1) << 6;
+
 	if (Forgottn) {
 		// Handle analog controls
 		if (fFakeDip & 0x80) {
-			if (CpsDigUD[0]) nDial055 += 1<<13; // p1
-			if (CpsDigUD[1]) nDial055 -= 1<<13;
-			if (CpsDigUD[2]) nDial05d += 1<<13; // p2
-			if (CpsDigUD[3]) nDial05d -= 1<<13;
-			nDial055 += (INT32)((INT16)CpsInp055)<<3;
-			nDial05d += (INT32)((INT16)CpsInp05d)<<3;
+			if (CpsDigUD[0]) nDial055 += 0x40; // p1
+			if (CpsDigUD[1]) nDial055 -= 0x40;
+			if (CpsDigUD[2]) nDial05d += 0x40; // p2
+			if (CpsDigUD[3]) nDial05d -= 0x40;
 		} else {
-			if (CpsDigUD[0]) nDial055 -= 1<<13; // p1
-			if (CpsDigUD[1]) nDial055 += 1<<13;
-			if (CpsDigUD[2]) nDial05d -= 1<<13; // p2
-			if (CpsDigUD[3]) nDial05d += 1<<13;
-			nDial055 -= (INT32)((INT16)CpsInp055)<<3;
-			nDial05d -= (INT32)((INT16)CpsInp05d)<<3;
+			if (CpsDigUD[0]) nDial055 -= 0x40; // p1
+			if (CpsDigUD[1]) nDial055 += 0x40;
+			if (CpsDigUD[2]) nDial05d -= 0x40; // p2
+			if (CpsDigUD[3]) nDial05d += 0x40;
 		}
 	}
 	
@@ -633,8 +649,8 @@ INT32 CpsRwGetInp()
 		CpsPaddle1 += CpsInpPaddle1 / 0x80; // add +-8 maximum to paddle-accumulator
 	}
 
-	StopOpposite(&Inp000);
-	StopOpposite(&Inp001);
+	clear_opposite.check(0, Inp000, 0x0c, 0x03);
+	clear_opposite.check(1, Inp001, 0x0c, 0x03);
 
 	// Ghouls uses a 4-way stick
 	if (Ghouls) {
@@ -665,19 +681,19 @@ INT32 CpsRwGetInp()
 
 	if (nMaxPlayers > 2) {
 		if (Cps == 2) {
-			StopOpposite(&Inp011);
+			clear_opposite.check(2, Inp011, 0x0c, 0x03);
 			if (nMaxPlayers == 4) {
-				StopOpposite(&Inp010);
+				clear_opposite.check(3, Inp010, 0x0c, 0x03);
 			}
 		} else {
-			StopOpposite(&Inp177);
+			clear_opposite.check(4, Inp177, 0x0c, 0x03);
 			if (nMaxPlayers == 4) {
-				StopOpposite(&Inp179);
+				clear_opposite.check(5, Inp179, 0x0c, 0x03);
 			}
 			if (Cps1Qs) {
-				StopOpposite(&Inpc001);
+				clear_opposite.check(6, Inpc001, 0x0c, 0x03);
 				if (nMaxPlayers == 4) {
-					StopOpposite(&Inpc003);
+					clear_opposite.check(7, Inpc003, 0x0c, 0x03);
 				}
 			}
 		}

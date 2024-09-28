@@ -1,4 +1,4 @@
-// FB Alpha Pre-Gx driver module
+// FB Neo Pre-Gx driver module
 // based on MAME driver by R. Belmont, Phil Stroffolino, Acho A. Tang, Nicola Salmoria
 
 /*
@@ -95,7 +95,11 @@ static UINT16 control_data = 0;
 static UINT8 mw_irq_control = 0;
 static INT32 z80_bank;
 
-static INT32 nGame = 0;
+static INT32 nGame        = 0;
+static INT32 viostormubbl = 0;
+
+static void gamma_init();
+static void gamma_exit();
 
 static struct BurnInputInfo MystwarrInputList[] = {
 	{"P1 Coin",		    BIT_DIGITAL,	DrvJoy1 + 0,	"p1 coin"},
@@ -167,6 +171,7 @@ static struct BurnInputInfo MetamrphInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy4 + 6,	"p2 fire 3"},
 
+	{"P3 Coin",		    BIT_DIGITAL,	DrvJoy1 + 2,	"p3 coin"},
 	{"P3 Start",		BIT_DIGITAL,	DrvJoy3 + 15,	"p3 start"},
 	{"P3 Up",		    BIT_DIGITAL,	DrvJoy3 + 10,	"p3 up"},
 	{"P3 Down",		    BIT_DIGITAL,	DrvJoy3 + 11,	"p3 down"},
@@ -176,6 +181,7 @@ static struct BurnInputInfo MetamrphInputList[] = {
 	{"P3 Button 2",		BIT_DIGITAL,	DrvJoy3 + 13,	"p3 fire 2"},
 	{"P3 Button 3",		BIT_DIGITAL,	DrvJoy3 + 14,	"p3 fire 3"},
 
+	{"P4 Coin",		    BIT_DIGITAL,	DrvJoy1 + 3,	"p4 coin"},
 	{"P4 Start",		BIT_DIGITAL,	DrvJoy4 + 15,	"p4 start"},
 	{"P4 Up",		    BIT_DIGITAL,	DrvJoy4 + 10,	"p4 up"},
 	{"P4 Down",		    BIT_DIGITAL,	DrvJoy4 + 11,	"p4 down"},
@@ -215,6 +221,7 @@ static struct BurnInputInfo ViostormInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy4 + 6,	"p2 fire 3"},
 
+	{"P3 Coin",		    BIT_DIGITAL,	DrvJoy1 + 2,	"p3 coin"},
 	{"P3 Start",		BIT_DIGITAL,	DrvJoy3 + 15,	"p3 start"},
 	{"P3 Up",		    BIT_DIGITAL,	DrvJoy3 + 10,	"p3 up"},
 	{"P3 Down",		    BIT_DIGITAL,	DrvJoy3 + 11,	"p3 down"},
@@ -224,6 +231,7 @@ static struct BurnInputInfo ViostormInputList[] = {
 	{"P3 Button 2",		BIT_DIGITAL,	DrvJoy3 + 13,	"p3 fire 2"},
 	{"P3 Button 3",		BIT_DIGITAL,	DrvJoy3 + 14,	"p3 fire 3"},
 
+	{"P4 Coin",		    BIT_DIGITAL,	DrvJoy1 + 3,	"p4 coin"},
 	{"P4 Start",		BIT_DIGITAL,	DrvJoy4 + 15,	"p4 start"},
 	{"P4 Up",		    BIT_DIGITAL,	DrvJoy4 + 10,	"p4 up"},
 	{"P4 Down",		    BIT_DIGITAL,	DrvJoy4 + 11,	"p4 down"},
@@ -238,11 +246,12 @@ static struct BurnInputInfo ViostormInputList[] = {
 	{"Service 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"service"},
 	{"Service 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"service"},
 	{"Dip A",		    BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
+	{"Dip B",		    BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 STDINPUTINFO(Viostorm)
 
-static struct BurnInputInfo DadandrnInputList[] = {
+static struct BurnInputInfo DadandrnInputList[] = { // and gaiapolis
 	{"P1 Coin",		    BIT_DIGITAL,	DrvJoy1 + 8,	"p1 coin"},
 	{"P1 Start",		BIT_DIGITAL,	DrvJoy1 + 7,	"p1 start"},
 	{"P1 Up",		    BIT_DIGITAL,	DrvJoy1 + 2,	"p1 up"},
@@ -262,24 +271,6 @@ static struct BurnInputInfo DadandrnInputList[] = {
 	{"P2 Button 1",		BIT_DIGITAL,	DrvJoy3 + 4,	"p2 fire 1"},
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 5,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 6,	"p2 fire 3"},
-
-	{"P3 Start",		BIT_DIGITAL,	DrvJoy4 + 7,	"p3 start"},
-	{"P3 Up",		    BIT_DIGITAL,	DrvJoy4 + 2,	"p3 up"},
-	{"P3 Down",		    BIT_DIGITAL,	DrvJoy4 + 3,	"p3 down"},
-	{"P3 Left",		    BIT_DIGITAL,	DrvJoy4 + 0,	"p3 left"},
-	{"P3 Right",		BIT_DIGITAL,	DrvJoy4 + 1,	"p3 right"},
-	{"P3 Button 1",		BIT_DIGITAL,	DrvJoy4 + 4,	"p3 fire 1"},
-	{"P3 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p3 fire 2"},
-	{"P3 Button 3",		BIT_DIGITAL,	DrvJoy4 + 6,	"p3 fire 3"},
-
-	{"P4 Start",		BIT_DIGITAL,	DrvJoy5 + 7,	"p4 start"},
-	{"P4 Up",		    BIT_DIGITAL,	DrvJoy5 + 2,	"p4 up"},
-	{"P4 Down",		    BIT_DIGITAL,	DrvJoy5 + 3,	"p4 down"},
-	{"P4 Left",		    BIT_DIGITAL,	DrvJoy5 + 0,	"p4 left"},
-	{"P4 Right",		BIT_DIGITAL,	DrvJoy5 + 1,	"p4 right"},
-	{"P4 Button 1",		BIT_DIGITAL,	DrvJoy5 + 4,	"p4 fire 1"},
-	{"P4 Button 2",		BIT_DIGITAL,	DrvJoy5 + 5,	"p4 fire 2"},
-	{"P4 Button 3",		BIT_DIGITAL,	DrvJoy5 + 6,	"p4 fire 3"},
 
 	{"Reset",		    BIT_DIGITAL,	&DrvReset,	    "reset"},
 	{"Service Mode",	BIT_DIGITAL,	DrvService + 0,	"diag"},
@@ -311,6 +302,7 @@ static struct BurnInputInfo MartchmpInputList[] = {
 	{"P2 Button 2",		BIT_DIGITAL,	DrvJoy3 + 13,	"p2 fire 2"},
 	{"P2 Button 3",		BIT_DIGITAL,	DrvJoy3 + 14,	"p2 fire 3"},
 
+	{"P3 Coin",		    BIT_DIGITAL,	DrvJoy1 + 2,	"p3 coin"},
 	{"P3 Start",		BIT_DIGITAL,	DrvJoy4 + 7,	"p3 start"},
 	{"P3 Up",		    BIT_DIGITAL,	DrvJoy4 + 2,	"p3 up"},
 	{"P3 Down",		    BIT_DIGITAL,	DrvJoy4 + 3,	"p3 down"},
@@ -320,6 +312,7 @@ static struct BurnInputInfo MartchmpInputList[] = {
 	{"P3 Button 2",		BIT_DIGITAL,	DrvJoy4 + 5,	"p3 fire 2"},
 	{"P3 Button 3",		BIT_DIGITAL,	DrvJoy4 + 6,	"p3 fire 3"},
 
+	{"P4 Coin",		    BIT_DIGITAL,	DrvJoy1 + 3,	"p4 coin"},
 	{"P4 Start",		BIT_DIGITAL,	DrvJoy4 + 15,	"p4 start"},
 	{"P4 Up",		    BIT_DIGITAL,	DrvJoy4 + 10,	"p4 up"},
 	{"P4 Down",		    BIT_DIGITAL,	DrvJoy4 + 11,	"p4 down"},
@@ -334,53 +327,56 @@ static struct BurnInputInfo MartchmpInputList[] = {
 	{"Service 1",		BIT_DIGITAL,	DrvJoy1 + 4,	"service"},
 	{"Service 2",		BIT_DIGITAL,	DrvJoy1 + 5,	"service"},
 	{"Dip A",		    BIT_DIPSWITCH,	DrvDips + 0,	"dip"},
+	{"Dip B",		    BIT_DIPSWITCH,	DrvDips + 1,	"dip"},
 };
 
 STDINPUTINFO(Martchmp)
 
 static struct BurnDIPInfo MystwarrDIPList[]=
 {
-	{0x26, 0xff, 0xff, 0xe0, NULL			},
-	{0x27, 0xff, 0xff, 0x00, NULL			},
+	DIP_OFFSET(0x26)
+	{0x00, 0xff, 0xff, 0xe0, NULL			},
+	{0x01, 0xff, 0xff, 0x00, NULL			},
 
 	{0   , 0xfe, 0   ,    2, "Sound Output"		},
-	{0x26, 0x01, 0x10, 0x10, "Mono"			},
-	{0x26, 0x01, 0x10, 0x00, "Stereo"		},
+	{0x00, 0x01, 0x10, 0x10, "Mono"			},
+	{0x00, 0x01, 0x10, 0x00, "Stereo"		},
 
 	{0   , 0xfe, 0   ,    2, "Coin Mechanism"	},
-	{0x26, 0x01, 0x20, 0x20, "Common"		},
-	{0x26, 0x01, 0x20, 0x00, "Independent"		},
+	{0x00, 0x01, 0x20, 0x20, "Common"		},
+	{0x00, 0x01, 0x20, 0x00, "Independent"		},
 
 	{0   , 0xfe, 0   ,    2, "Number of Players"	},
-	{0x26, 0x01, 0x40, 0x00, "4"			},
-	{0x26, 0x01, 0x40, 0x40, "2"			},
+	{0x00, 0x01, 0x40, 0x00, "4"			},
+	{0x00, 0x01, 0x40, 0x40, "2"			},
 
 	{0   , 0xfe, 0   ,    2, "Debug Alpha Mode (debug console/logfile)"		},
-	{0x27, 0x01, 0x01, 0x00, "Off"			},
-	{0x27, 0x01, 0x01, 0x01, "On"			},
+	{0x01, 0x01, 0x01, 0x00, "Off"			},
+	{0x01, 0x01, 0x01, 0x01, "On"			},
 };
 
 STDDIPINFO(Mystwarr)
 
 static struct BurnDIPInfo MetamrphDIPList[]=
 {
-	{0x26, 0xff, 0xff, 0xe0, NULL				},
+	DIP_OFFSET(0x28)
+	{0x00, 0xff, 0xff, 0xe0, NULL				},
 
 	{0   , 0xfe, 0   ,    2, "Sound Output"			},
-	{0x26, 0x01, 0x10, 0x10, "Mono"				},
-	{0x26, 0x01, 0x10, 0x00, "Stereo"			},
+	{0x00, 0x01, 0x10, 0x10, "Mono"				},
+	{0x00, 0x01, 0x10, 0x00, "Stereo"			},
 
 	{0   , 0xfe, 0   ,    2, "Coin Mechanism"		},
-	{0x26, 0x01, 0x20, 0x20, "Common"			},
-	{0x26, 0x01, 0x20, 0x00, "Independent"			},
+	{0x00, 0x01, 0x20, 0x20, "Common"			},
+	{0x00, 0x01, 0x20, 0x00, "Independent"			},
 
 	{0   , 0xfe, 0   ,    2, "Number of Players"		},
-	{0x26, 0x01, 0x40, 0x00, "4"				},
-	{0x26, 0x01, 0x40, 0x40, "2"				},
+	{0x00, 0x01, 0x40, 0x00, "4"				},
+	{0x00, 0x01, 0x40, 0x40, "2"				},
 
 	{0   , 0xfe, 0   ,    2, "Continuous Energy Increment"	},
-	{0x26, 0x01, 0x80, 0x80, "No"				},
-	{0x26, 0x01, 0x80, 0x00, "Yes"				},
+	{0x00, 0x01, 0x80, 0x80, "No"				},
+	{0x00, 0x01, 0x80, 0x00, "Yes"				},
 };
 
 STDDIPINFO(Metamrph)
@@ -388,53 +384,66 @@ STDDIPINFO(Metamrph)
 
 static struct BurnDIPInfo ViostormDIPList[]=
 {
-	{0x26, 0xff, 0xff, 0xe0, NULL			},
+	DIP_OFFSET(0x28)
+	{0x00, 0xff, 0xff, 0xe0, NULL				},
+	{0x01, 0xff, 0xff, 0x00, NULL				},
 
 	{0   , 0xfe, 0   ,    2, "Sound Output"		},
-	{0x26, 0x01, 0x10, 0x10, "Mono"			},
-	{0x26, 0x01, 0x10, 0x00, "Stereo"		},
+	{0x00, 0x01, 0x10, 0x10, "Mono"				},
+	{0x00, 0x01, 0x10, 0x00, "Stereo"			},
 
 	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
-	{0x26, 0x01, 0x20, 0x20, "Off"			},
-	{0x26, 0x01, 0x20, 0x00, "On"			},
+	{0x00, 0x01, 0x20, 0x20, "Off"				},
+	{0x00, 0x01, 0x20, 0x00, "On"				},
 
 	{0   , 0xfe, 0   ,    2, "Coin Mechanism"	},
-	{0x26, 0x01, 0x40, 0x40, "Common"		},
-	{0x26, 0x01, 0x40, 0x00, "Independent"		},
+	{0x00, 0x01, 0x40, 0x40, "Common"			},
+	{0x00, 0x01, 0x40, 0x00, "Independent"		},
 
-	{0   , 0xfe, 0   ,    2, "Number of Players"	},
-	{0x26, 0x01, 0x80, 0x00, "3"			},
-	{0x26, 0x01, 0x80, 0x80, "2"			},
+	{0   , 0xfe, 0   ,    2, "Number of Players"},
+	{0x00, 0x01, 0x80, 0x00, "3"				},
+	{0x00, 0x01, 0x80, 0x80, "2"				},
+
+	{0   , 0xfe, 0   ,    2, "Color Improvement"},
+	{0x01, 0x01, 0x40, 0x40, "On"				},
+	{0x01, 0x01, 0x40, 0x00, "Off"				},
 };
 
 STDDIPINFO(Viostorm)
 
-static struct BurnDIPInfo DadandrnDIPList[]=
+static struct BurnDIPInfo DadandrnDIPList[]= // and gaiapolis
 {
-	{0x26, 0xff, 0xff, 0xe0, NULL			},
+	DIP_OFFSET(0x16)
+	{0x00, 0xff, 0xff, 0xe0, NULL				},
 
 	{0   , 0xfe, 0   ,    2, "Sound Output"		},
-	{0x26, 0x01, 0x10, 0x10, "Mono"			},
-	{0x26, 0x01, 0x10, 0x00, "Stereo"		},
+	{0x00, 0x01, 0x10, 0x10, "Mono"				},
+	{0x00, 0x01, 0x10, 0x00, "Stereo"			},
 
 	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
-	{0x26, 0x01, 0x20, 0x20, "Off"			},
-	{0x26, 0x01, 0x20, 0x00, "On"			},
+	{0x00, 0x01, 0x20, 0x20, "Off"				},
+	{0x00, 0x01, 0x20, 0x00, "On"				},
 };
 
 STDDIPINFO(Dadandrn)
 
 static struct BurnDIPInfo MartchmpDIPList[]=
 {
-	{0x26, 0xff, 0xff, 0xe0, NULL			},
+	DIP_OFFSET(0x28)
+	{0x00, 0xff, 0xff, 0xe0, NULL				},
+	{0x01, 0xff, 0xff, 0x00, NULL				},
 
 	{0   , 0xfe, 0   ,    2, "Sound Output"		},
-	{0x26, 0x01, 0x10, 0x10, "Mono"			},
-	{0x26, 0x01, 0x10, 0x00, "Stereo"		},
+	{0x00, 0x01, 0x10, 0x10, "Mono"				},
+	{0x00, 0x01, 0x10, 0x00, "Stereo"			},
 
 	{0   , 0xfe, 0   ,    2, "Flip Screen"		},
-	{0x26, 0x01, 0x20, 0x20, "Off"			},
-	{0x26, 0x01, 0x20, 0x00, "On"			},
+	{0x00, 0x01, 0x20, 0x20, "Off"				},
+	{0x00, 0x01, 0x20, 0x00, "On"				},
+
+	{0   , 0xfe, 0   ,    2, "Speed Hacks"		},
+	{0x01, 0x01, 0x80, 0x00, "Off"				},
+	{0x01, 0x01, 0x80, 0x80, "On"				},
 };
 
 STDDIPINFO(Martchmp)
@@ -854,6 +863,7 @@ static void __fastcall metamrph_main_write_word(UINT32 address, UINT16 data)
 			EEPROMWrite((data & 0x04), (data & 0x02), (data & 0x01));
 		return;
 	}
+//	bprintf(0, _T("ww  %x  %x\n"), address, data);
 }
 
 static void __fastcall metamrph_main_write_byte(UINT32 address, UINT8 data)
@@ -940,6 +950,8 @@ static void __fastcall metamrph_main_write_byte(UINT32 address, UINT8 data)
 			EEPROMWrite((data & 0x04), (data & 0x02), (data & 0x01));
 		return;
 	}
+//	if (address != 0x27c000)
+//		bprintf(0, _T("bw  %x  %x\n"), address, data);
 }
 
 static UINT16 __fastcall metamrph_main_read_word(UINT32 address)
@@ -1225,6 +1237,11 @@ static void __fastcall martchmp_main_write_byte(UINT32 address, UINT8 data)
 	}
 
 	if ((address & 0xffffc0) == 0x40c000) {
+		if (DrvDips[1] & 0x80) { // Speed Hack (disable linescroll)
+			if ((address & 0x3f) == 0x0b && data == 0x03) {
+				data = 0xf3;
+			}
+		}
 		K056832ByteWrite(address & 0x3f, data);
 		return;
 	}
@@ -1697,6 +1714,7 @@ static UINT8 __fastcall mystwarr_sound_read(UINT16 address)
 static INT32 superblend = 0;
 static INT32 oldsuperblend = 0;
 static INT32 superblendoff = 0;
+static INT32 superblendl0 = 0;
 
 static void mystwarr_tile_callback(INT32 layer, INT32 *code, INT32 *color, INT32 *flags)
 {
@@ -1712,13 +1730,35 @@ static void mystwarr_tile_callback(INT32 layer, INT32 *code, INT32 *color, INT32
 		else if ((*code & 0xff00) + (*color) == 0xFC05) superblend++; // part 5.
 		else if ((*code & 0xff00) + (*color) == 0xD001) superblend++; // Title Screen
 		else if ((*code & 0xff00) + (*color) == 0xC700) superblendoff++; // End Boss death scene (anti superblend)
-
+		else if ((*code & 0xff00) + (*color) == 0x8910) superblendoff++; // Skull Boss, pink background layer
+	}
+	if (layer == 0) {
+		/**/ if ((*code & 0xff00) + (*color) == 0xf00d) {superblend++,superblendl0=1;} // ending Spyros (matt damon)
+		else if ((*code & 0xff00) + (*color) == 0xfd0d) {superblend++,superblendl0=1;} // ending Brad (voodoo homie)
+		else if ((*code & 0xff00) + (*color) == 0xf611) {superblend++,superblendl0=1;} // ending Yuri (ass&titties)
+		else if ((*code & 0xff00) + (*color) == 0xf501) {superblend++,superblendl0=1;} // ending Keima (clown-furry)
+		else if ((*code & 0xff00) + (*color) == 0xf801) {superblend++,superblendl0=1;} // ending Kojiro (regular guy)
+		//extern int counter;
 		//if (counter) bprintf(0, _T("%X %X (%X), "), *code, *color, (*code & 0xff00) + (*color)); /* save this! -dink */
 	}
 	*color = layer_colorbase[layer] | ((*color >> 1) & 0x1e);
 }
 
-static void metamrph_tile_callback(INT32 layer, INT32 */*code*/, INT32 *color, INT32 */*flags*/)
+static void metamrph_tile_callback(INT32 layer, INT32 *code, INT32 *color, INT32 */*flags*/)
+{
+	if (layer == 1) {
+		if (*code >= 0x6270  && *code <= 0x627d) {
+			// for the window light, we have to hack the palette
+			konami_palette32[0x101] = 0xefefef;
+			konami_palette32[0x102] = 0xdfdfdf;
+		}
+		*color = layer_colorbase[layer] | (*color >> 2 & 0x0f);
+	} else {
+		*color = layer_colorbase[layer] | (*color >> 2 & 0x0f);
+	}
+}
+
+static void viostorm_tile_callback(INT32 layer, INT32 *code, INT32 *color, INT32 */*flags*/)
 {
 	*color = layer_colorbase[layer] | (*color >> 2 & 0x0f);
 }
@@ -1731,20 +1771,24 @@ static void mystwarr_sprite_callback(INT32 */*code*/, INT32 *color, INT32 *prior
 {
 	INT32 c = *color;
 	*color = sprite_colorbase | (c & 0x001f);
-	*priority = c & 0x00f0;
+	*priority = c & 0x00e0; // was 0xf0, but that broke tv's @ endboss
 }
 
-static void metamrph_sprite_callback(INT32 */*code*/, INT32 *color, INT32 *priority)
+static void metamrph_sprite_callback(INT32 *code, INT32 *color, INT32 *priority)
 {
 	INT32 c = *color;
 	INT32 attr = c;
 
+	//bprintf(0, _T("code/color/pri:  %x  %x  %x\n"), *code, *color, *priority);
+
 	c = (c & 0x1f) | sprite_colorbase;
 
-	if ((attr & 0x300) != 0x300)
+	if ((attr & 0x300) != 0x300) // && !(*code >= 0xfab0 && *code <= 0xfc00)) // not-good hackfix for intro
 	{
 		*color = c;
-		*priority = (attr & 0xe0) >> 2;
+		// metamorphic force: title screen & first boss w/psychedelic rings
+		// priority issues.  fixed by adding 5 to the sprite priority -dink feb 2024
+		*priority = ((attr & 0xe0) >> 2) + ((nGame == 2) ? 5 : 0);
 	}
 	else
 	{
@@ -1840,6 +1884,7 @@ static INT32 DrvDoReset()
 	oinprion = 0;
 
 	superblend = 0; // for mystwarr alpha tile count
+	superblendl0 = 0;
 	oldsuperblend = 0;
 	superblendoff = 0;
 
@@ -1862,25 +1907,25 @@ static INT32 MemIndex()
 	DrvGfxROM2		= Next; Next += 0x500000;
 	DrvGfxROM3		= Next; Next += 0x100000;
 
-	DrvGfxROMExp0		= Next; Next += 0xc00000;
-	DrvGfxROMExp1		= Next; Next += 0x1000000;
-	DrvGfxROMExp2		= Next; Next += 0x800000;
+	DrvGfxROMExp0	= Next; Next += 0xc00000;
+	DrvGfxROMExp1	= Next; Next += 0x1000000;
+	DrvGfxROMExp2	= Next; Next += 0x800000;
 
 	DrvSndROM		= Next; Next += 0x400000;
 
 	DrvEeprom		= Next; Next += 0x000080;
 
-	konami_palette32	= (UINT32*)Next;
+	konami_palette32= (UINT32*)Next;
 	DrvPalette		= (UINT32*)Next; Next += 0x0800 * sizeof(UINT32);
 
 	AllRam			= Next;
 
 	Drv68KRAM		= Next; Next += 0x010000;
-	DrvSpriteRam		= Next; Next += 0x010000;
+	DrvSpriteRam	= Next; Next += 0x010000;
 	DrvPalRAM		= Next; Next += 0x002000;
 
-	DrvK053936Ctrl		= Next; Next += 0x000400;
-	DrvK053936RAM		= Next; Next += 0x001000;
+	DrvK053936Ctrl	= Next; Next += 0x000400;
+	DrvK053936RAM	= Next; Next += 0x001000;
 
 	DrvZ80RAM		= Next; Next += 0x002800;
 
@@ -1927,7 +1972,7 @@ static void decode_gfx1(UINT8 *src, UINT8 *d, INT32 len)
 
 	GfxDecode(((nLen * 8) / 5) / 0x40, 5, 8, 8, Plane, XOffs, YOffs, 8*8*5, tmp, DrvGfxROMExp0);
 
-	BurnFree (tmp);
+	BurnFree(tmp);
 }
 
 static void DecodeSprites(UINT8 *rom, UINT8 *exprom, INT32 len)
@@ -1957,7 +2002,7 @@ static void DecodeSprites(UINT8 *rom, UINT8 *exprom, INT32 len)
 
 	GfxDecode(size4 / 128, 5, 16, 16, Plane, XOffs, YOffs, 16*16*5, tmp, exprom);
 
-	BurnFree (tmp);
+	BurnFree(tmp);
 }
 
 static void Metamrph_sprite_decode()
@@ -1988,13 +2033,7 @@ static INT32 MystwarrInit()
 	nGame = 1;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 0x000001,  0, 2)) return 1;
@@ -2034,7 +2073,7 @@ static INT32 MystwarrInit()
 	K056832SetLayerOffsets(2,  2-3, 0);
 	K056832SetLayerOffsets(3,  3-3, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, mystwarr_sprite_callback, 3);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, mystwarr_sprite_callback, 1);
 	K053247SetSpriteOffset(-25-48, -15-24);
 	K053247SetBpp(5);
 
@@ -2101,13 +2140,7 @@ static INT32 MetamrphInit()
 	nGame = 2;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 0x000000,  0, 2)) return 1;
@@ -2218,32 +2251,44 @@ static INT32 ViostormInit()
 	nGame = 3;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
-		if (BurnLoadRom(Drv68KROM  + 0x000000,  0, 2)) return 1;
-		if (BurnLoadRom(Drv68KROM  + 0x000001,  1, 2)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x000000, 0, 2)) return 1;
+		if (BurnLoadRom(Drv68KROM + 0x000001, 1, 2)) return 1;
 
-		if (BurnLoadRom(DrvZ80ROM  + 0x000000,  2, 1)) return 1;
+		if (BurnLoadRom(DrvZ80ROM + 0x000000, 2, 1)) return 1;
 
-		if (BurnLoadRomExt(DrvGfxROM0 + 0x000000,  3, 5, LD_GROUP(2) | LD_REVERSE)) return 1;
-		if (BurnLoadRomExt(DrvGfxROM0 + 0x000002,  4, 5, LD_GROUP(2) | LD_REVERSE)) return 1;
+		if (1 == viostormubbl) {
+/*			DrvGfxROM0: nGap = 5;
+--------------------------------------------------------------------------------------
+//			00	01	02	03	04	05	06	07	08	09	0A	0B	0C	0D	0E	0F			//
+//	0000	a[0]b[0]c[0]d[0]00	a[1]b[1]c[1]d[1]00	a[2]b[2]c[2]d[2]00	a[3] ...	//	
+--------------------------------------------------------------------------------------	
+*/
+			INT32 nIndex = 3;
+			for (INT32 i = 0; i < 8; i++, nIndex++) {
+				if (i < 4) {
+					if (BurnLoadRom(DrvGfxROM0        + i, nIndex +  0, 5)) return 1;
+				}
+				if (BurnLoadRom(DrvGfxROM1 + 0x000000 + i, nIndex +  4, 8)) return 1;
+				if (BurnLoadRom(DrvGfxROM1 + 0x400000 + i, nIndex + 12, 8)) return 1;
+				if (BurnLoadRom(DrvSndROM  + 0x080000 * i, nIndex + 20, 1)) return 1;
+			}
+		} else {
+			if (BurnLoadRomExt(DrvGfxROM0 + 0x000000, 3, 5, LD_GROUP(2) | LD_REVERSE)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM0 + 0x000002, 4, 5, LD_GROUP(2) | LD_REVERSE)) return 1;
 
-		if (BurnLoadRomExt(DrvGfxROM1 + 0x000000,  5, 8, 2)) return 1;
-		if (BurnLoadRomExt(DrvGfxROM1 + 0x000002,  6, 8, 2)) return 1;
-		if (BurnLoadRomExt(DrvGfxROM1 + 0x000004,  7, 8, 2)) return 1;
-		if (BurnLoadRomExt(DrvGfxROM1 + 0x000006,  8, 8, 2)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000000, 5, 8, 2)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000002, 6, 8, 2)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000004, 7, 8, 2)) return 1;
+			if (BurnLoadRomExt(DrvGfxROM1 + 0x000006, 8, 8, 2)) return 1;
 
-		if (BurnLoadRom(DrvSndROM  + 0x000000,  9, 1)) return 1;
-		if (BurnLoadRom(DrvSndROM  + 0x200000, 10, 1)) return 1;
+			if (BurnLoadRom(DrvSndROM + 0x000000,  9, 1)) return 1;
+			if (BurnLoadRom(DrvSndROM + 0x200000, 10, 1)) return 1;
+		}
 
-		if (BurnLoadRom(DrvEeprom  + 0x000000, 11, 1)) return 1;
+		if (BurnLoadRom(DrvEeprom + 0x000000, (1 == viostormubbl) ? 31 : 11, 1)) return 1;
 
 		decode_gfx1(DrvGfxROM0, DrvGfxROMExp0, 0x600000);
 
@@ -2253,19 +2298,20 @@ static INT32 ViostormInit()
 	K055555Init();
 	K054338Init();
 
-	K056832Init(DrvGfxROM0, DrvGfxROMExp0, 0x200000, metamrph_tile_callback);
+	K056832Init(DrvGfxROM0, DrvGfxROMExp0, 0x200000, viostorm_tile_callback);
 	K056832SetGlobalOffsets(40, 16);
 	K056832SetLayerOffsets(0, -2+1, 0);
 	K056832SetLayerOffsets(1,  0+1, 0);
 	K056832SetLayerOffsets(2,  2+1, 0);
 	K056832SetLayerOffsets(3,  3+1, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, metamrph_sprite_callback, 3);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, metamrph_sprite_callback, 1);
 	K053247SetSpriteOffset(-62-40, -23-16);
 
 	K053250Init(0, DrvGfxROM2, DrvGfxROMExp2, 1); // doesn't exist on this hardware
 
 	konamigx_mixer_init(0);
+	konamigx_mixer_primode(0xf);
 
 	SekInit(0, 0x68000);
 	SekOpen(0);
@@ -2320,13 +2366,7 @@ static INT32 MartchmpInit()
 	nGame = 4;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 0x000001,  0, 2)) return 1;
@@ -2367,7 +2407,7 @@ static INT32 MartchmpInit()
 	K056832SetLayerOffsets(2,  2-4, 0);
 	K056832SetLayerOffsets(3,  3-4, 0);
 
-	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, martchmp_sprite_callback, 3);
+	K053247Init(DrvGfxROM1, DrvGfxROMExp1, 0x7fffff, martchmp_sprite_callback, 1);
 	K053247SetSpriteOffset((-23-58-9), (-16-23-14)+0xd);
 	K053247SetBpp(5);
 
@@ -2475,13 +2515,7 @@ static INT32 GaiapolisInit()
 	nGame = 5;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 0x000001,  0, 2)) return 1;
@@ -2520,7 +2554,7 @@ static INT32 GaiapolisInit()
 	K055555Init();
 	K054338Init();
 
-	K056832Init(DrvGfxROM0, DrvGfxROMExp0, 0x400000, metamrph_tile_callback);
+	K056832Init(DrvGfxROM0, DrvGfxROMExp0, 0x400000, viostorm_tile_callback);
 	K056832SetGlobalOffsets(32, 16);
 	K056832SetLayerOffsets(0, -2, 0);
 	K056832SetLayerOffsets(1,  0, 0);
@@ -2637,13 +2671,7 @@ static INT32 DadandrnInit()
 	nGame = 6;
 
 	GenericTilesInit();
-
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	{
 		if (BurnLoadRom(Drv68KROM  + 0x000001,  0, 2)) return 1;
@@ -2766,6 +2794,8 @@ static INT32 DadandrnInit()
 
 static INT32 DrvExit()
 {
+	gamma_exit();
+
 	GenericTilesExit();
 
 	KonamiICExit();
@@ -2777,23 +2807,60 @@ static INT32 DrvExit()
 
 	K054539Exit();
 
-	BurnFree (AllMem);
+	BurnFree(AllMem);
 	if (pMystwarrRozBitmap) {
-		BurnFree (pMystwarrRozBitmap);
+		BurnFree(pMystwarrRozBitmap);
 		pMystwarrRozBitmap = NULL;
 	}
+
+	viostormubbl = 0;
+
 	return 0;
+}
+
+static UINT8 *gamma_lut = NULL;
+static UINT8 last_gamma_dip = ~0;
+
+static void gamma_init()
+{
+	if (gamma_lut == NULL) {
+		gamma_lut = (UINT8*)BurnMalloc(0x100);
+		last_gamma_dip = ~0;
+	}
+
+	if (last_gamma_dip == (DrvDips[1] & 0x40)) return;
+
+	if (nGame == 3 && DrvDips[1] & 0x40) { // only applied to viostorm, gamma 0.650 (expressed as 1/0.650)
+		bprintf(0, _T("viostorm: apply gamma 1.0 / 0.650\n"));
+		for (INT32 i = 0; i < 0x100; i++) {
+			gamma_lut[i] = (UINT8)(pow((double)i / 255.0, 1.0 / 0.650) * 255.0);
+		}
+	} else {
+		bprintf(0, _T("no gamma\n"));
+		for (INT32 i = 0; i < 0x100; i++) {
+			gamma_lut[i] = i;
+		}
+	}
+	last_gamma_dip = DrvDips[1] & 0x40;
+}
+
+static void gamma_exit() {
+	BurnFree(gamma_lut);
+
+	gamma_lut = NULL;
 }
 
 static void DrvPaletteRecalc()
 {
+	gamma_init();
+
 	UINT16 *pal = (UINT16*)DrvPalRAM;
 
 	for (INT32 i = 0; i < 0x2000/2; i+=2)
 	{
-		INT32 r = BURN_ENDIAN_SWAP_INT16(pal[i+0]) & 0xff;
-		INT32 g = BURN_ENDIAN_SWAP_INT16(pal[i+1]) >> 8;
-		INT32 b = BURN_ENDIAN_SWAP_INT16(pal[i+1]) & 0xff;
+		INT32 r = gamma_lut[BURN_ENDIAN_SWAP_INT16(pal[i+0]) & 0xff];
+		INT32 g = gamma_lut[BURN_ENDIAN_SWAP_INT16(pal[i+1]) >> 8];
+		INT32 b = gamma_lut[BURN_ENDIAN_SWAP_INT16(pal[i+1]) & 0xff];
 
 		DrvPalette[i/2] = (r << 16) + (g << 8) + b;
 	}
@@ -2836,22 +2903,26 @@ static INT32 DrvDraw()
 			}
 
 			if ((superblend || oldsuperblend) && !superblendoff) {
-				blendmode = (1 << 16 | GXMIX_BLEND_FORCE) << 2; // using "|| oldsuperblend" for 1 frame latency, to avoid flickers on the water level when he gets "flushed" into the boss part
+				blendmode = ((1 << 16 | GXMIX_BLEND_FORCE) << (superblendl0 ? 0 : 2)); // using "|| oldsuperblend" for 1 frame latency, to avoid flickers on the water level when he gets "flushed" into the boss part
 			}
 
 			if (DrvDips[1] & 1) // debug alpha
-				bprintf(0, _T("%X %X (%X), "), superblend, oldsuperblend, Drv68KRAM[0x2335]);
+				bprintf(0, _T("%X %X [off?%x] (%X), "), superblend, oldsuperblend, superblendoff, Drv68KRAM[0x2335]);
 
 			oldsuperblend = superblend;
 			if (superblend) superblend = 1;
 
+			superblendl0 = 0;
+
 			superblendoff = 0; // frame-based.
 		}
-
+		if (DrvDips[1] & 1) {
+			bprintf(0, _T("blend  %x\n"), blendmode);
+		}
 		sprite_colorbase = K055555GetPaletteIndex(4)<<5;
 	}
 
-	if (nGame == 2 || nGame == 3) { // viostorm / metamrph
+	if (nGame == 2 || nGame == 3) { // metamrph / viostorm
 		sub_flags = GXSUB_K053250 | GXSUB_4BPP;
 		sprite_colorbase = K055555GetPaletteIndex(4)<<4;
 	}
@@ -2888,6 +2959,22 @@ static INT32 DrvDraw()
 	return 0;
 }
 
+void clear_opposites_viostorm(UINT16 &ipt)
+{
+	if ((ipt & 0x0003) == 0x0000) {
+		ipt |= 0x0003;
+	}
+	if ((ipt & 0x000c) == 0x0000) {
+		ipt |= 0x000c;
+	}
+	if ((ipt & 0x0300) == 0x0000) {
+		ipt |= 0x0300;
+	}
+	if ((ipt & 0x0c00) == 0x0000) {
+		ipt |= 0x0c00;
+	}
+}
+
 static INT32 DrvFrame()
 {
 	if (DrvReset) {
@@ -2895,6 +2982,11 @@ static INT32 DrvFrame()
 	}
 
 	{
+		if (nGame == 3 || nGame == 2 || nGame == 4) { // viostorm, metamrph, martchmp
+			DrvJoy1[0] |= DrvJoy1[2]; // mirror coin inputs for kaillera
+			DrvJoy1[1] |= DrvJoy1[3];
+		}
+
 		memset (DrvInputs, 0xff, 5 * sizeof(INT16));
 		for (INT32 i = 0; i < 16; i++) {
 			DrvInputs[0] ^= (DrvJoy1[i] & 1) << i;
@@ -2903,6 +2995,12 @@ static INT32 DrvFrame()
 			DrvInputs[3] ^= (DrvJoy4[i] & 1) << i;
 			DrvInputs[4] ^= (DrvJoy5[i] & 1) << i;
 		}
+
+		if (nGame == 3) { // viostorm
+			clear_opposites_viostorm(DrvInputs[2]);
+			clear_opposites_viostorm(DrvInputs[3]);
+		}
+
 
 		DrvInputs[1] = DrvDips[0] | (DrvInputs[1] & 0xff00) | 2;
 		if (nGame == 1) DrvInputs[0] &= 0xff;
@@ -3054,6 +3152,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(superblend);
 		SCAN_VAR(oldsuperblend);
 		SCAN_VAR(superblendoff);
+		SCAN_VAR(superblendl0);
 
 		SCAN_VAR(nExtraCycles);
 
@@ -3417,6 +3516,70 @@ struct BurnDriver BurnDrvViostormub = {
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 3, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
 	NULL, viostormubRomInfo, viostormubRomName, NULL, NULL, NULL, NULL, ViostormInputInfo, ViostormDIPInfo,
 	ViostormInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
+	384, 224, 4, 3
+};
+
+
+// Violent Storm (ver UAB, bootleg)
+
+static struct BurnRomInfo viostormubblRomDesc[] = {
+	{ "168_ua7_01.bin",		0x080000, 0x97d3df09, 1 }, //  0 maincpu
+	{ "168_ua7_02.bin",		0x080000, 0x2c591f92, 1 }, //  1
+
+	{ "168_a_05.bin",		0x020000, 0x507fb3eb, 2 }, //  2 soundcpu
+
+	{ "168_a_09_h.bin",		0x080000, 0x4ffd6e92, 3 }, //  3 gfx1
+	{ "168_a_09_l.bin",		0x080000, 0xf657bddd, 3 }, //  4
+	{ "168_a_08_h.bin",		0x080000, 0x143ce52e, 3 }, //  5
+	{ "168_a_08_l.bin",		0x080000, 0x4f656594, 3 }, //  6
+
+	{ "168_a_10_al.bin",	0x080000, 0xe6570da5, 4 }, //  7 gfx2
+	{ "168_a_10_ah.bin",	0x080000, 0xe8ce69b1, 4 }, //  8
+	{ "168_a_11_al.bin",	0x080000, 0x252cc0bc, 4 }, //  9
+	{ "168_a_11_ah.bin",	0x080000, 0xc2db121c, 4 }, // 10
+	{ "168_a_12_al.bin",	0x080000, 0xe86258c1, 4 }, // 11
+	{ "168_a_12_ah.bin",	0x080000, 0x92180725, 4 }, // 12
+	{ "168_a_13_al.bin",	0x080000, 0xaef49217, 4 }, // 13
+	{ "168_a_13_ah.bin",	0x080000, 0x9694f82b, 4 }, // 14
+	{ "168_a_10_bl.bin",	0x080000, 0x90bfdf5c, 4 }, // 15
+	{ "168_a_10_bh.bin",	0x080000, 0x1699d50e, 4 }, // 16
+	{ "168_a_11_bl.bin",	0x080000, 0x9b85594e, 4 }, // 17
+	{ "168_a_11_bh.bin",	0x080000, 0x57efd95f, 4 }, // 18
+	{ "168_a_12_bl.bin",	0x080000, 0x3c7fde2c, 4 }, // 19
+	{ "168_a_12_bh.bin",	0x080000, 0x77dbd7b0, 4 }, // 20
+	{ "168_a_13_bl.bin",	0x080000, 0x26326a3c, 4 }, // 21
+	{ "168_a_13_bh.bin",	0x080000, 0x3cc402fb, 4 }, // 22
+
+	{ "168_a_06_a.bin",		0x080000, 0xbf42efc1, 5 }, // 23 shared
+	{ "168_a_06_b.bin",		0x080000, 0x97c3e6d2, 5 }, // 24
+	{ "168_a_06_c.bin",		0x080000, 0xb5a67bf0, 5 }, // 25
+	{ "168_a_06_d.bin",		0x080000, 0x58c407f1, 5 }, // 26
+	{ "168_a_07_a.bin",		0x080000, 0x39af77b8, 5 }, // 27
+	{ "168_a_07_b.bin",		0x080000, 0x0ad59b02, 5 }, // 28
+	{ "168_a_07_c.bin",		0x080000, 0x31f2a927, 5 }, // 29
+	{ "168_a_07_d.bin",		0x080000, 0x4a2ea6f6, 5 }, // 30
+
+	// default eeprom to prevent game booting upside down with error
+	{ "viostormub.nv",		0x000080, 0xb6937413, 6 }, // 31 eeprom
+};
+
+STD_ROM_PICK(viostormubbl)
+STD_ROM_FN(viostormubbl)
+
+static INT32 ViostormubblInit()
+{
+	viostormubbl = 1;
+
+	return ViostormInit();
+}
+
+struct BurnDriver BurnDrvViostormubbl = {
+	"viostormubbl", "viostorm", NULL, NULL, "1993",
+	"Violent Storm (ver UAB, bootleg)\0", NULL, "bootleg (Eye Pro)", "GX168",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 3, HARDWARE_PREFIX_KONAMI, GBF_SCRFIGHT, 0,
+	NULL, viostormubblRomInfo, viostormubblRomName, NULL, NULL, NULL, NULL, ViostormInputInfo, ViostormDIPInfo,
+	ViostormubblInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x800,
 	384, 224, 4, 3
 };
 

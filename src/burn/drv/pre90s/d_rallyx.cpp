@@ -1,4 +1,4 @@
-// FinalBurn Alpha driver module for Rally-X, based on the MAME driver by Nicola Salmoria.
+// FinalBurn Neo driver module for Rally-X, based on the MAME driver by Nicola Salmoria.
 // Emulates Rally-X variants, Jungler, Tactician, Loco-Motion & Commando (Sega)
 // Oddities: Jungler has flipped-mode on by default, but it only affects sprites
 //           and bullets.
@@ -17,7 +17,7 @@ static UINT8 DrvDip[2]            = {0, 0};
 static UINT8 DrvInput[3]          = {0, 0, 0};
 static UINT8 DrvReset             = 0;
 
-static UINT8 *Mem                 = NULL;
+static UINT8 *AllMem              = NULL;
 static UINT8 *MemEnd              = NULL;
 static UINT8 *RamStart            = NULL;
 static UINT8 *RamEnd              = NULL;
@@ -86,6 +86,33 @@ static struct BurnInputInfo DrvInputList[] =
 };
 
 STDINPUTINFO(Drv)
+
+static struct BurnInputInfo RallyxegInputList[] =
+{
+	{ "Coin 1"            , BIT_DIGITAL  , DrvInputPort0 + 7, "p1 coin"   },
+	{ "Start 1"           , BIT_DIGITAL  , DrvInputPort0 + 6, "p1 start"  },
+	{ "Coin 2"            , BIT_DIGITAL  , DrvInputPort1 + 7, "p2 coin"   },
+	{ "Start 2"           , BIT_DIGITAL  , DrvInputPort1 + 6, "p2 start"  },
+
+	{ "Left"              , BIT_DIGITAL  , DrvInputPort0 + 2, "p1 up"     },
+	{ "Right"             , BIT_DIGITAL  , DrvInputPort0 + 3, "p1 down"   },
+	{ "Down"              , BIT_DIGITAL  , DrvInputPort0 + 4, "p1 left"   },
+	{ "Up"                , BIT_DIGITAL  , DrvInputPort0 + 5, "p1 right"  },
+	{ "Fire 1"            , BIT_DIGITAL  , DrvInputPort0 + 1, "p1 fire 1" },
+	
+	{ "Left (Cocktail)"   , BIT_DIGITAL  , DrvInputPort1 + 2, "p2 up"     },
+	{ "Right (Cocktail)"  , BIT_DIGITAL  , DrvInputPort1 + 3, "p2 down"   },
+	{ "Down (Cocktail)"   , BIT_DIGITAL  , DrvInputPort1 + 4, "p2 left"   },
+	{ "Up (Cocktail)"     , BIT_DIGITAL  , DrvInputPort1 + 5, "p2 right"  },
+	{ "Fire 1 (Cocktail)" , BIT_DIGITAL  , DrvInputPort1 + 1, "p2 fire 1" },
+
+	{ "Reset"             , BIT_DIGITAL  , &DrvReset        , "reset"     },
+	{ "Service"           , BIT_DIGITAL  , DrvInputPort0 + 0, "service"   },
+	{ "Dip 1"             , BIT_DIPSWITCH, DrvDip + 0       , "dip"       },
+	{ "Dip 2"             , BIT_DIPSWITCH, DrvDip + 1       , "dip"       },
+};
+
+STDINPUTINFO(Rallyxeg)
 
 static struct BurnInputInfo JunglerInputList[] =
 {
@@ -384,7 +411,7 @@ static struct BurnDIPInfo CommsegaDIPList[]=
 
 STDDIPINFO(Commsega)
 
-static inline void DrvMakeInputs()
+static inline void DrvMakeInputs() // rallyx
 {
 	// Reset Inputs
 	DrvInput[0] = 0xff;
@@ -395,6 +422,9 @@ static inline void DrvMakeInputs()
 		DrvInput[0] ^= (DrvInputPort0[i] & 1) << i;
 		DrvInput[1] ^= (DrvInputPort1[i] & 1) << i;
 	}
+
+	ProcessJoystick(&DrvInput[0], 0, 5,4,2,3, INPUT_4WAY | INPUT_ISACTIVELOW);
+	ProcessJoystick(&DrvInput[1], 1, 5,4,2,3, INPUT_4WAY | INPUT_ISACTIVELOW);
 }
 
 static inline void JunglerMakeInputs()
@@ -629,6 +659,33 @@ static struct BurnRomInfo RallyxmrRomDesc[] = {
 STD_ROM_PICK(Rallyxmr)
 STD_ROM_FN(Rallyxmr)
 
+static struct BurnRomInfo RallyxegRomDesc[] = {
+	{ "6101_2716.1b",  0x00800, 0x921699dc, BRF_ESS | BRF_PRG }, //  0	Z80 Program Code
+	{ "6102_2716.1c",  0x00800, 0x7cbeb656, BRF_ESS | BRF_PRG }, //	 1
+	{ "6103_2716.1e",  0x00800, 0x36e9918f, BRF_ESS | BRF_PRG }, //	 2
+	{ "6104_2716.1f",  0x00800, 0xb986fcf8, BRF_ESS | BRF_PRG }, //	 3
+	{ "6105_2716.1h",  0x00800, 0x1fb0ced8, BRF_ESS | BRF_PRG }, //	 4
+	{ "6106_2716.1j",  0x00800, 0xd72ee519, BRF_ESS | BRF_PRG }, //	 5
+	{ "6107_2716.1k",  0x00800, 0x843109f2, BRF_ESS | BRF_PRG }, //	 6
+	{ "6108_2716.1m",  0x00800, 0x8ab078ef, BRF_ESS | BRF_PRG }, //	 7
+	
+	{ "10_2716.8e",    0x00800, 0x836fb24f, BRF_GRA },	     //  8	Characters & Sprites
+	{ "9_2716.8d",     0x00800, 0x22d7113b, BRF_GRA },	     //  9
+	
+	{ "r6_82s129.8m",  0x00100, 0x3c16f62c, BRF_GRA },	     //  10	Dots
+	
+	{ "r1_82s123.1n",  0x00020, 0xc7865434, BRF_GRA },	     //  11	Palette PROM
+	{ "r7_82s129.8p",  0x00100, 0x834d4fda, BRF_GRA },	     //  12	Lookup PROM
+	{ "r2_82s123.4n",  0x00020, 0x659c3f5d, BRF_GRA },	     //  13	Video Layout PROM
+	{ "r3_82s123.7k",  0x00020, 0xbdef006f, BRF_GRA },	     //  14	Video Timing PROM
+	
+	{ "r5_82s129.3p",  0x00100, 0x4bad7017, BRF_SND },	     //  15	Sound PROMs
+	{ "r4_82s129.2m",  0x00100, 0x77245b66, BRF_SND },	     //  16
+};
+
+STD_ROM_PICK(Rallyxeg)
+STD_ROM_FN(Rallyxeg)
+
 static struct BurnRomInfo DngrtrckRomDesc[] = {
 	{ "1b-2716.bin",   0x00800, 0xb6180a12, BRF_ESS | BRF_PRG }, //  0	Z80 Program Code
 	{ "1c-2716.bin",   0x00800, 0x7cbeb656, BRF_ESS | BRF_PRG }, //	 1
@@ -711,7 +768,7 @@ STD_SAMPLE_FN(Rallyx)
 
 static INT32 MemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	UINT8 *Next; Next = AllMem;
 
 	DrvZ80Rom1             = Next; Next += 0x04000;
 	DrvPromPalette         = Next; Next += 0x00020;
@@ -740,7 +797,7 @@ static INT32 MemIndex()
 
 static INT32 JunglerMemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	UINT8 *Next; Next = AllMem;
 
 	DrvZ80Rom1             = Next; Next += 0x08000;
 	DrvZ80Rom2             = Next; Next += 0x02000;
@@ -1182,15 +1239,10 @@ static void JunglerMachineInit()
 
 static INT32 DrvInit()
 {
-	INT32 nRet = 0, nLen;
+	INT32 nRet = 0;
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x01000);
 
@@ -1228,15 +1280,10 @@ static INT32 DrvInit()
 
 static INT32 DrvaInit()
 {
-	INT32 nRet = 0, nLen;
+	INT32 nRet = 0;
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x01000);
 
@@ -1279,15 +1326,10 @@ static INT32 DrvaInit()
 
 static INT32 NrallyxInit()
 {
-	INT32 nRet = 0, nLen;
+	INT32 nRet = 0;
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
-	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x01000);
 
@@ -1338,11 +1380,11 @@ static INT32 JunglerInit()
 	INT32 nRet = 0, nLen;
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
+	AllMem = NULL;
 	JunglerMemIndex();
 	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(AllMem, 0, nLen);
 	JunglerMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x01000);
@@ -1388,11 +1430,11 @@ static INT32 LococommonDrvInit(INT32 prgroms, INT32 soundroms)
 	INT32 nRet = 0, nLen;
 
 	// Allocate and Blank all required memory
-	Mem = NULL;
+	AllMem = NULL;
 	JunglerMemIndex();
 	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
+	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
+	memset(AllMem, 0, nLen);
 	JunglerMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x04000);
@@ -1447,7 +1489,7 @@ static INT32 DrvExit()
 
 	ZetExit();
 	
-	BurnFree(Mem);
+	BurnFreeMemIndex();
 	
 	DrvCPUFireIRQ = 0;
 	DrvCPUIRQVector = 0;
@@ -2004,6 +2046,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 		if (rallyx) {
 			NamcoSoundScan(nAction, pnMin);
+			BurnSampleScan(nAction, pnMin);
 		}
 
 		SCAN_VAR(DrvCPUFireIRQ);
@@ -2040,7 +2083,7 @@ struct BurnDriver BurnDrvRallyxa = {
 
 struct BurnDriver BurnDrvRallyxm = {
 	"rallyxm", "rallyx", NULL, "rallyx", "1980",
-	"Rally X (Midway)\0", NULL, "Namco (Midway License)", "Miscellaneous",
+	"Rally X (Midway)\0", NULL, "Namco (Midway license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, RallyxmRomInfo, RallyxmRomName, NULL, NULL, RallyxSampleInfo, RallyxSampleName, DrvInputInfo, DrvDIPInfo,
@@ -2050,19 +2093,29 @@ struct BurnDriver BurnDrvRallyxm = {
 
 struct BurnDriver BurnDrvRallyxmr = {
 	"rallyxmr", "rallyx", NULL, "rallyx", "1980",
-	"Rally X (Model Racing)\0", NULL, "bootleg (Petaco)", "Miscellaneous",
+	"Rally X (Model Racing bootleg)\0", NULL, "bootleg (Model Racing)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, RallyxmrRomInfo, RallyxmrRomName, NULL, NULL, RallyxSampleInfo, RallyxSampleName, DrvInputInfo, DrvDIPInfo,
 	DrvaInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
 	NULL, 260, 288, 224, 4, 3
 };
 
+struct BurnDriver BurnDrvRallyxeg = {
+	"rallyxeg", "rallyx", NULL, "rallyx", "1981",
+	"Rally X (Video Game bootleg)\0", NULL, "bootleg (Video Game / Electrogame)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_ORIENTATION_VERTICAL | BDF_ORIENTATION_FLIPPED | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	NULL, RallyxegRomInfo, RallyxegRomName, NULL, NULL, RallyxSampleInfo, RallyxSampleName, RallyxegInputInfo, DrvDIPInfo,
+	DrvaInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
+	NULL, 260, 224, 288, 3, 4
+};
+
 struct BurnDriver BurnDrvDngrtrck = {
 	"dngrtrck", "rallyx", NULL, "rallyx", "1980",
-	"Danger Track (Rally X bootleg)\0", NULL, "bootleg", "Miscellaneous",
+	"Danger Track (bootleg of Rally X)\0", NULL, "bootleg (Petaco)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_MAZE, 0,
 	NULL, DngrtrckRomInfo, DngrtrckRomName, NULL, NULL, RallyxSampleInfo, RallyxSampleName, DrvInputInfo, DngrtrckDIPInfo,
 	DrvaInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
 	NULL, 260, 288, 224, 4, 3
@@ -2133,18 +2186,18 @@ struct BurnDriver BurnDrvTactcian = {
 // Tactician (set 2)
 
 static struct BurnRomInfo tactcian2RomDesc[] = {
-	{ "tan1",		0x1000, 0xddf38b75, 1 }, //  0 maincpu
-	{ "tan2",		0x1000, 0xf065ee2e, 1 }, //  1
-	{ "tan3",		0x1000, 0x2dba64fe, 1 }, //  2
-	{ "tan4",		0x1000, 0x2ba07847, 1 }, //  3
-	{ "tan5",		0x1000, 0x1dae4c61, 1 }, //  4
-	{ "tan6",		0x1000, 0x2b36a18d, 1 }, //  5
+	{ "tan1",			0x1000, 0xddf38b75, 1 }, //  0 maincpu
+	{ "tan2",			0x1000, 0xf065ee2e, 1 }, //  1
+	{ "tan3",			0x1000, 0x2dba64fe, 1 }, //  2
+	{ "tan4",			0x1000, 0x2ba07847, 1 }, //  3
+	{ "tan5",			0x1000, 0x1dae4c61, 1 }, //  4
+	{ "tan6",			0x1000, 0x2b36a18d, 1 }, //  5
 
 	{ "tacticia.s2",	0x1000, 0x97d145a7, 2 }, //  6 tpsound
 	{ "tacticia.s1",	0x1000, 0x067f781b, 2 }, //  7
 
-	{ "c1",			0x1000, 0x5399471f, 3 }, //  8 gfx1
-	{ "c2",			0x1000, 0x8e8861e8, 3 }, //  9
+	{ "c1",				0x1000, 0x5399471f, 3 }, //  8 gfx1
+	{ "c2",				0x1000, 0x8e8861e8, 3 }, //  9
 
 	{ "tact6301.004",	0x0100, 0x88b0b511, 4 }, // 10 gfx2
 
@@ -2174,22 +2227,22 @@ INT32 LocomotnDrvInit()
 // Loco-Motion
 
 static struct BurnRomInfo locomotnRomDesc[] = {
-	{ "1a.cpu",	0x1000, 0xb43e689a, 1 }, //  0 maincpu
-	{ "2a.cpu",	0x1000, 0x529c823d, 1 }, //  1
-	{ "3.cpu",	0x1000, 0xc9dbfbd1, 1 }, //  2
-	{ "4.cpu",	0x1000, 0xcaf6431c, 1 }, //  3
-	{ "5.cpu",	0x1000, 0x64cf8dd6, 1 }, //  4
+	{ "1a.cpu",		0x1000, 0xb43e689a, 1 }, //  0 maincpu
+	{ "2a.cpu",		0x1000, 0x529c823d, 1 }, //  1
+	{ "3.cpu",		0x1000, 0xc9dbfbd1, 1 }, //  2
+	{ "4.cpu",		0x1000, 0xcaf6431c, 1 }, //  3
+	{ "5.cpu",		0x1000, 0x64cf8dd6, 1 }, //  4
 
 	{ "1b_s1.bin",	0x1000, 0xa1105714, 2 }, //  5 tpsound
 
 	{ "5l_c1.bin",	0x1000, 0x5732eda9, 3 }, //  6 gfx1
-	{ "c2.cpu",	0x1000, 0xc3035300, 3 }, //  7
+	{ "c2.cpu",		0x1000, 0xc3035300, 3 }, //  7
 
 	{ "10g.bpr",	0x0100, 0x2ef89356, 4 }, //  8 gfx2
 
-	{ "8b.bpr",	0x0020, 0x75b05da0, 5 }, //  9 proms
-	{ "9d.bpr",	0x0100, 0xaa6cf063, 5 }, // 10
-	{ "7a.bpr",	0x0020, 0x48c8f094, 5 }, // 11
+	{ "8b.bpr",		0x0020, 0x75b05da0, 5 }, //  9 proms
+	{ "9d.bpr",		0x0100, 0xaa6cf063, 5 }, // 10
+	{ "7a.bpr",		0x0020, 0x48c8f094, 5 }, // 11
 	{ "10a.bpr",	0x0020, 0xb8861096, 5 }, // 12
 };
 
@@ -2211,9 +2264,9 @@ INT32 GutangtnDrvInit()
 	return LococommonDrvInit(5, 1);
 }
 
-// Guttang Gottong
+// Guttang Gottong (Sega license)
 
-static struct BurnRomInfo gutangtnRomDesc[] = {
+static struct BurnRomInfo gutangtnsRomDesc[] = {
 	{ "3d_1.bin",	0x1000, 0xe9757395, 1 }, //  0 maincpu
 	{ "3e_2.bin",	0x1000, 0x11d21d2e, 1 }, //  1
 	{ "3f_3.bin",	0x1000, 0x4d80f895, 1 }, //  2
@@ -2227,50 +2280,84 @@ static struct BurnRomInfo gutangtnRomDesc[] = {
 
 	{ "10g.bpr",	0x0100, 0x2ef89356, 4 }, //  8 gfx2
 
-	{ "8b.bpr",	0x0020, 0x75b05da0, 5 }, //  9 proms
-	{ "9d.bpr",	0x0100, 0xaa6cf063, 5 }, // 10
-	{ "7a.bpr",	0x0020, 0x48c8f094, 5 }, // 11
+	{ "8b.bpr",		0x0020, 0x75b05da0, 5 }, //  9 proms
+	{ "9d.bpr",		0x0100, 0xaa6cf063, 5 }, // 10
+	{ "7a.bpr",		0x0020, 0x48c8f094, 5 }, // 11
 	{ "10a.bpr",	0x0020, 0xb8861096, 5 }, // 12
+};
+
+STD_ROM_PICK(gutangtns)
+STD_ROM_FN(gutangtns)
+
+struct BurnDriver BurnDrvGutangtns = {
+	"gutangtns", "locomotn", NULL, NULL, "1982",
+	"Guttang Gottong (Sega license)\0", NULL, "Konami (Sega license)", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
+	NULL, gutangtnsRomInfo, gutangtnsRomName, NULL, NULL, NULL, NULL, LocomotnInputInfo, LocomotnDIPInfo,
+	GutangtnDrvInit, DrvExit, JunglerFrame, DrvDrawJungler, DrvScan,
+	NULL, 324, 224, 256, 3, 4
+};
+
+// Guttang Gottong
+
+static struct BurnRomInfo gutangtnRomDesc[] = {
+	{ "bimm_001.r1",	0x1000, 0xdfa2089c, 1 }, //  0 maincpu
+	{ "bimm_002.r2",	0x1000, 0x1de5e6a0, 1 }, //  1
+	{ "bimm_003.r3",	0x1000, 0x01f909fe, 1 }, //  2
+	{ "bimm_004.r4",	0x1000, 0xa89eb3e3, 1 }, //  3
+
+	{ "bimm_007.b1",	0x1000, 0x3d83f6d3, 2 }, //  4 tpsound
+	{ "bimm_008.c1",	0x1000, 0x323e1937, 2 }, //  5
+
+	{ "bimm_005.r9",	0x1000, 0x992d079c, 3 }, //  6 gfx1
+	{ "bimm_006.r10",	0x1000, 0xf0414f1d, 3 }, //  7
+
+	{ "5.bpr",			0x0100, 0x21fb583f, 4 }, //  8 gfx2
+
+	{ "2.bpr",			0x0020, 0x26f42e6f, 5 }, //  9 proms
+	{ "3.bpr",			0x0100, 0x4aecc0c8, 5 }, // 10
+	{ "7a.bpr",			0x0020, 0x48c8f094, 5 }, // 11
+	{ "10a.bpr",		0x0020, 0xb8861096, 5 }, // 12
 };
 
 STD_ROM_PICK(gutangtn)
 STD_ROM_FN(gutangtn)
-
-struct BurnDriver BurnDrvGutangtn = {
-	"gutangtn", "locomotn", NULL, NULL, "1982",
-	"Guttang Gottong\0", NULL, "Konami (Sega license)", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
-	NULL, gutangtnRomInfo, gutangtnRomName, NULL, NULL, NULL, NULL, LocomotnInputInfo, LocomotnDIPInfo,
-	GutangtnDrvInit, DrvExit, JunglerFrame, DrvDrawJungler, DrvScan,
-	NULL, 324, 224, 256, 3, 4
-};
 
 INT32 CottongDrvInit()
 {
 	return LococommonDrvInit(4, 2);
 }
 
+struct BurnDriver BurnDrvGutangtn = {
+	"gutangtn", "locomotn", NULL, NULL, "1982",
+	"Guttang Gottong\0", NULL, "Konami", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
+	NULL, gutangtnRomInfo, gutangtnRomName, NULL, NULL, NULL, NULL, LocomotnInputInfo, LocomotnDIPInfo,
+	CottongDrvInit, DrvExit, JunglerFrame, DrvDrawJungler, DrvScan,
+	NULL, 324, 224, 256, 3, 4
+};
 
 // Cotocoto Cottong
 
 static struct BurnRomInfo cottongRomDesc[] = {
-	{ "c1",		0x1000, 0x2c256fe6, 1 }, //  0 maincpu
-	{ "c2",		0x1000, 0x1de5e6a0, 1 }, //  1
-	{ "c3",		0x1000, 0x01f909fe, 1 }, //  2
-	{ "c4",		0x1000, 0xa89eb3e3, 1 }, //  3
+	{ "c1",			0x1000, 0x2c256fe6, 1 }, //  0 maincpu
+	{ "c2",			0x1000, 0x1de5e6a0, 1 }, //  1
+	{ "c3",			0x1000, 0x01f909fe, 1 }, //  2
+	{ "c4",			0x1000, 0xa89eb3e3, 1 }, //  3
 
-	{ "c7",		0x1000, 0x3d83f6d3, 2 }, //  4 tpsound
-	{ "c8",		0x1000, 0x323e1937, 2 }, //  5
+	{ "c7",			0x1000, 0x3d83f6d3, 2 }, //  4 tpsound
+	{ "c8",			0x1000, 0x323e1937, 2 }, //  5
 
-	{ "c5",		0x1000, 0x992d079c, 3 }, //  6 gfx1
-	{ "c6",		0x1000, 0x0149ef46, 3 }, //  7
+	{ "c5",			0x1000, 0x992d079c, 3 }, //  6 gfx1
+	{ "c6",			0x1000, 0x0149ef46, 3 }, //  7
 
-	{ "5.bpr",	0x0100, 0x21fb583f, 4 }, //  8 gfx2
+	{ "5.bpr",		0x0100, 0x21fb583f, 4 }, //  8 gfx2
 
-	{ "2.bpr",	0x0020, 0x26f42e6f, 5 }, //  9 proms
-	{ "3.bpr",	0x0100, 0x4aecc0c8, 5 }, // 10
-	{ "7a.bpr",	0x0020, 0x48c8f094, 5 }, // 11
+	{ "2.bpr",		0x0020, 0x26f42e6f, 5 }, //  9 proms
+	{ "3.bpr",		0x0100, 0x4aecc0c8, 5 }, // 10
+	{ "7a.bpr",		0x0020, 0x48c8f094, 5 }, // 11
 	{ "10a.bpr",	0x0020, 0xb8861096, 5 }, // 12
 };
 
@@ -2281,7 +2368,7 @@ struct BurnDriver BurnDrvCottong = {
 	"cottong", "locomotn", NULL, NULL, "1982",
 	"Cotocoto Cottong\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
 	NULL, cottongRomInfo, cottongRomName, NULL, NULL, NULL, NULL, LocomotnInputInfo, LocomotnDIPInfo,
 	CottongDrvInit, DrvExit, JunglerFrame, DrvDrawJungler, DrvScan,
 	NULL, 324, 224, 256, 3, 4
@@ -2295,22 +2382,22 @@ INT32 LocobootDrvInit()
 // Loco-Motion (bootleg)
 
 static struct BurnRomInfo locobootRomDesc[] = {
-	{ "g.116",	0x1000, 0x1248799c, 1 }, //  0 maincpu
-	{ "g.117",	0x1000, 0x5b5b5753, 1 }, //  1
-	{ "g.118",	0x1000, 0x6bc269e1, 1 }, //  2
-	{ "g.119",	0x1000, 0x3feb762e, 1 }, //  3
+	{ "g.116",		0x1000, 0x1248799c, 1 }, //  0 maincpu
+	{ "g.117",		0x1000, 0x5b5b5753, 1 }, //  1
+	{ "g.118",		0x1000, 0x6bc269e1, 1 }, //  2
+	{ "g.119",		0x1000, 0x3feb762e, 1 }, //  3
 
-	{ "c7",		0x1000, 0x3d83f6d3, 2 }, //  4 tpsound
-	{ "c8",		0x1000, 0x323e1937, 2 }, //  5
+	{ "c7",			0x1000, 0x3d83f6d3, 2 }, //  4 tpsound
+	{ "c8",			0x1000, 0x323e1937, 2 }, //  5
 
-	{ "c5",		0x1000, 0x992d079c, 3 }, //  6 gfx1
-	{ "c6",		0x1000, 0x0149ef46, 3 }, //  7
+	{ "c5",			0x1000, 0x992d079c, 3 }, //  6 gfx1
+	{ "c6",			0x1000, 0x0149ef46, 3 }, //  7
 
-	{ "5.bpr",	0x0100, 0x21fb583f, 4 }, //  8 gfx2
+	{ "5.bpr",		0x0100, 0x21fb583f, 4 }, //  8 gfx2
 
-	{ "2.bpr",	0x0020, 0x26f42e6f, 5 }, //  9 proms
-	{ "3.bpr",	0x0100, 0x4aecc0c8, 5 }, // 10
-	{ "7a.bpr",	0x0020, 0x48c8f094, 5 }, // 11
+	{ "2.bpr",		0x0020, 0x26f42e6f, 5 }, //  9 proms
+	{ "3.bpr",		0x0100, 0x4aecc0c8, 5 }, // 10
+	{ "7a.bpr",		0x0020, 0x48c8f094, 5 }, // 11
 	{ "10a.bpr",	0x0020, 0xb8861096, 5 }, // 12
 };
 
@@ -2321,7 +2408,7 @@ struct BurnDriver BurnDrvLocoboot = {
 	"locoboot", "locomotn", NULL, NULL, "1982",
 	"Loco-Motion (bootleg)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_MISC_PRE90S, GBF_PUZZLE, 0,
 	NULL, locobootRomInfo, locobootRomName, NULL, NULL, NULL, NULL, LocomotnInputInfo, LocomotnDIPInfo,
 	LocobootDrvInit, DrvExit, JunglerFrame, DrvDrawJungler, DrvScan,
 	NULL, 324, 224, 256, 3, 4
@@ -2337,16 +2424,16 @@ INT32 CommsegaDrvInit()
 // Commando (Sega)
 
 static struct BurnRomInfo commsegaRomDesc[] = {
-	{ "csega1",	0x1000, 0x92de3405, 1 }, //  0 maincpu
-	{ "csega2",	0x1000, 0xf14e2f9a, 1 }, //  1
-	{ "csega3",	0x1000, 0x941dbf48, 1 }, //  2
-	{ "csega4",	0x1000, 0xe0ac69b4, 1 }, //  3
-	{ "csega5",	0x1000, 0xbc56ebd0, 1 }, //  4
+	{ "csega1",		0x1000, 0x92de3405, 1 }, //  0 maincpu
+	{ "csega2",		0x1000, 0xf14e2f9a, 1 }, //  1
+	{ "csega3",		0x1000, 0x941dbf48, 1 }, //  2
+	{ "csega4",		0x1000, 0xe0ac69b4, 1 }, //  3
+	{ "csega5",		0x1000, 0xbc56ebd0, 1 }, //  4
 
-	{ "csega8",	0x1000, 0x588b4210, 2 }, //  5 tpsound
+	{ "csega8",		0x1000, 0x588b4210, 2 }, //  5 tpsound
 
-	{ "csega7",	0x1000, 0xe8e374f9, 3 }, //  6 gfx1
-	{ "csega6",	0x1000, 0xcf07fd5e, 3 }, //  7
+	{ "csega7",		0x1000, 0xe8e374f9, 3 }, //  6 gfx1
+	{ "csega6",		0x1000, 0xcf07fd5e, 3 }, //  7
 
 	{ "gg3.bpr",	0x0100, 0xae7fd962, 4 }, //  8 gfx2
 

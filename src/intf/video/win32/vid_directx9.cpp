@@ -1145,10 +1145,15 @@ static int dx9Init()
 		d3dpp.BackBufferHeight				= ScoreInfo.nBestHeight;
 		d3dpp.BackBufferFormat				= (nVidDepth == 16) ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
 		d3dpp.SwapEffect					= D3DSWAPEFFECT_FLIP;
-		d3dpp.BackBufferCount				= bVidTripleBuffer ? 2 : 1;
+		d3dpp.BackBufferCount				= bVidDX9WinFullscreen ? 1 : (bVidTripleBuffer ? 2 : 1);
 		d3dpp.hDeviceWindow					= hVidWnd;
 		d3dpp.FullScreen_RefreshRateInHz	= D3DPRESENT_RATE_DEFAULT;
-		d3dpp.PresentationInterval			= D3DPRESENT_INTERVAL_DEFAULT;
+		d3dpp.Windowed						= bVidDX9WinFullscreen;
+		d3dpp.PresentationInterval			= (bVidDX9WinFullscreen && bVidVSync) ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
+		if (bVidDX9WinFullscreen) {
+			d3dpp.SwapEffect = D3DSWAPEFFECT_COPY;
+			MoveWindow(hScrnWnd, 0, 0, d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, TRUE);
+		}
 	} else {
 		d3dpp.BackBufferWidth				= dm.Width;
 		d3dpp.BackBufferHeight				= dm.Height;
@@ -1323,6 +1328,8 @@ static int dx9Scale(RECT* pRect, int nWidth, int nHeight)
 // Copy BlitFXsMem to pddsBlitFX
 static int dx9MemToSurf()
 {
+	if (pVidImage == NULL) return 1; // prevent crash w/ sfiii2 screen resizer
+
 	GetClientRect(hVidWnd, &Dest);
 
 	if (nVidFullscreen == 0) {
@@ -2151,10 +2158,15 @@ static int dx9AltInit()
 		d3dpp.BackBufferHeight = sizefit ? ScoreInfo.nBestHeight : dm.Height;
 		d3dpp.BackBufferFormat = (nVidDepth == 16) ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
 		d3dpp.SwapEffect = D3DSWAPEFFECT_FLIP;
-		d3dpp.BackBufferCount = bVidTripleBuffer ? 2 : 1;
+		d3dpp.BackBufferCount = bVidDX9WinFullscreen ? 1 : (bVidTripleBuffer ? 2 : 1);
 		d3dpp.hDeviceWindow = hVidWnd;
-		d3dpp.FullScreen_RefreshRateInHz = dm.RefreshRate;
-		d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+		d3dpp.FullScreen_RefreshRateInHz = bVidDX9WinFullscreen ? D3DPRESENT_RATE_DEFAULT : dm.RefreshRate;
+		d3dpp.Windowed = bVidDX9WinFullscreen;
+		d3dpp.PresentationInterval = (bVidDX9WinFullscreen && bVidVSync) ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
+		if (bVidDX9WinFullscreen) {
+			d3dpp.SwapEffect = D3DSWAPEFFECT_COPY;
+			MoveWindow(hScrnWnd, 0, 0, d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, TRUE);
+		}
 	} else {
 		d3dpp.BackBufferWidth = dm.Width;
 		d3dpp.BackBufferHeight = dm.Height;
@@ -2362,6 +2374,8 @@ static void VidSCpyImg16(unsigned char* dst, unsigned int dstPitch, unsigned cha
 // Copy BlitFXsMem to pddsBlitFX
 static int dx9AltRender()  // MemToSurf
 {
+	if (pVidImage == NULL) return 1;
+
 	GetClientRect(hVidWnd, &Dest);
 
 	if (nVidFullscreen == 0) {

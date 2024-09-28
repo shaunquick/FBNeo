@@ -6,8 +6,15 @@
 #define CHEAT_MAXCPU	8 // enough?
 
 #define HW_NES ( ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_NES) || ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_FDS) )
-extern void nes_add_cheat(char *code); // from drv/nes/d_nes.cpp
-extern void nes_remove_cheat(char *code);
+
+void (*nes_add_cheat)(char *) = NULL;
+void (*nes_remove_cheat)(char *) = NULL;
+
+void nes_init_cheat_functions(void (*func1)(char*), void (*func2)(char*))
+{
+	nes_add_cheat = func1;
+	nes_remove_cheat = func2;
+}
 
 bool bCheatsAllowed;
 CheatInfo* pCheatInfo = NULL;
@@ -122,7 +129,7 @@ static void NESCheatDisable(CheatInfo* pCurrentCheat, INT32 nCheat)
 		if (HW_NES) {
 			// Disable Game Genie code
 			bprintf(0, _T("NES-Cheat #%d, option #%d: "), nCheat, pCurrentCheat->nCurrent);
-			nes_remove_cheat(pAddressInfo->szGenieCode);
+			if (nes_remove_cheat) nes_remove_cheat(pAddressInfo->szGenieCode);
 		}
 		pAddressInfo++;
 	}
@@ -215,7 +222,7 @@ INT32 CheatEnable(INT32 nCheat, INT32 nOption) // -1 / 0 - disable
 
 					if (HW_NES) {
 						bprintf(0, _T("NES-Cheat #%d, option #%d: "), nCheat, nOption);
-						nes_add_cheat(pAddressInfo->szGenieCode);
+						if (nes_add_cheat) nes_add_cheat(pAddressInfo->szGenieCode);
 					} else {
 						// Prefill data
 						if (pCurrentCheat->nPrefillMode) {
@@ -439,7 +446,6 @@ INT32 CheatApply()
 
 INT32 CheatInit()
 {
-	CheatExit();
 	CpuCheatRegisterInit();
 
 	bCheatsEnabled = false;
@@ -471,6 +477,8 @@ void CheatExit()
 	pCheatInfo = NULL;
 	
 	CheatSearchInitCallbackFunction = NULL;
+
+	nes_init_cheat_functions(NULL, NULL);
 }
 
 // Cheat search
@@ -732,6 +740,35 @@ bool IsHardwareAddressValid(HWAddressType address)
 		return false;
 }
 
+unsigned int ReadValueAtHardwareAddress_audio(HWAddressType address, unsigned int size, int isLittleEndian)
+{
+	unsigned int value = 0;
+
+	if (!bDrvOkay)
+		return 0;
+
+	cheat_ptr = &cpus[1]; // first cpu only (ok?)
+
+	INT32 nActiveCPU = cheat_ptr->cpuconfig->active();
+	if (nActiveCPU >= 0) cheat_ptr->cpuconfig->close();
+	cheat_ptr->cpuconfig->open(cheat_ptr->nCPU);
+
+	for (unsigned int i = 0; i < size; i++)
+	{
+		value <<= 8;
+		value |= cheat_ptr->cpuconfig->read(address);
+		if (isLittleEndian)
+			address--;
+		else
+			address++;
+	}
+
+	cheat_ptr->cpuconfig->close();
+	if (nActiveCPU >= 0) cheat_ptr->cpuconfig->open(nActiveCPU);
+
+	return value;
+}
+
 unsigned int ReadValueAtHardwareAddress(HWAddressType address, unsigned int size, int isLittleEndian)
 {
 	unsigned int value = 0;
@@ -750,6 +787,29 @@ unsigned int ReadValueAtHardwareAddress(HWAddressType address, unsigned int size
 		value <<= 8;
 		value |= cheat_ptr->cpuconfig->read(address);
 		if(isLittleEndian)
+			address--;
+		else
+			address++;
+	}
+
+	cheat_ptr->cpuconfig->close();
+	if (nActiveCPU >= 0) cheat_ptr->cpuconfig->open(nActiveCPU);
+
+	return value;
+}
+bool WriteValueAtHardwareAddress_audio(HWAddressType address, unsigned int value, unsigned int size, int isLittleEndian)
+{
+	cheat_ptr = &cpus[1]; // first cpu only (ok?)
+
+	INT32 nActiveCPU = cheat_ptr->cpuconfig->active();
+	if (nActiveCPU >= 0) cheat_ptr->cpuconfig->close();
+	cheat_ptr->cpuconfig->open(cheat_ptr->nCPU);
+
+	for (int i = (int)size - 1; i >= 0; i--) {
+		unsigned char memByte = (value >> (8 * i)) & 0xFF;
+		cheat_ptr->cpuconfig->write(address, memByte);
+
+		if (isLittleEndian)
 			address--;
 		else
 			address++;

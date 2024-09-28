@@ -1,4 +1,4 @@
-// FB Alpha Legend of Kage driver Module
+// FB Neo Legend of Kage driver Module
 // Based on MAME driver by Phil Stroffolino
 
 #include "tiles_generic.h"
@@ -48,6 +48,8 @@ static INT32 Lkageb;
 static INT32 FakeMCUVal;
 
 static INT32 is_bygone = 0;
+
+static INT32 nExtraCycles[3];
 
 static struct BurnInputInfo LkageInputList[] = {
 	{"P1 Coin",			BIT_DIGITAL,	DrvJoy1 + 4,	"p1 coin"	},
@@ -459,11 +461,8 @@ static INT32 DrvDoReset()
 {
 	memset (AllRam, 0, RamEnd - AllRam);
 
-	for (INT32 i = 0; i < 2; i++) {
-		ZetOpen(i);
-		ZetReset();
-		ZetClose();
-	}
+	ZetReset(0);
+	ZetReset(1);
 
 	m67805_taito_reset();
 
@@ -475,6 +474,8 @@ static INT32 DrvDoReset()
 
 	DrvNmiEnable = 0;
 	pending_nmi = 0;
+
+	nExtraCycles[0] = nExtraCycles[1] = nExtraCycles[2] = 0;
 
 	HiscoreReset();
 
@@ -512,7 +513,7 @@ static INT32 MemIndex()
 
 	DrvMcuRAM	= Next; Next += 0x000080;
 
-	lkage_scroll	= Next; Next += 0x000006;
+	lkage_scroll= Next; Next += 0x000006;
 	DrvVidReg	= Next; Next += 0x000004;
 
 	RamEnd		= Next;
@@ -547,12 +548,7 @@ static INT32 DrvGfxDecode()
 
 static INT32 DrvInit()
 {
-	AllMem = NULL;
-	MemIndex();
-	INT32 nLen = MemEnd - (UINT8 *)0;
-	if ((AllMem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(AllMem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	use_mcu = ~BurnDrvGetFlags() & BDF_BOOTLEG;
 
@@ -639,7 +635,7 @@ static INT32 DrvExit()
 
 	BurnYM2203Exit();
 
-	BurnFree (AllMem);
+	BurnFreeMemIndex();
 
 	Lkageb = 0;
 	FakeMCUVal = 0;
@@ -753,7 +749,7 @@ static INT32 DrvDraw()
 	if (DrvRecalc) {
 		for (INT32 i = 0; i < 0x400; i++) {
 			INT32 rgb = Palette[i];
-			DrvPalette[i] = BurnHighCol(rgb >> 16, rgb >> 8, rgb, 0);
+			DrvPalette[i] = BurnHighCol((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff, 0);
 		}
 		DrvRecalc = 0;
 	}
@@ -813,7 +809,7 @@ static INT32 DrvFrame()
 
 	INT32 nInterleave = 256;
 	INT32 nCyclesTotal[3] =  { 6000000 / 60, 6000000 / 60, 4000000 / 60 };
-	INT32 nCyclesDone[3] = { 0, 0, 0 };
+	INT32 nCyclesDone[3] = { nExtraCycles[0], 0, nExtraCycles[2] }; // BurnTimer (index 1) has built in cycle keeping
 
 	for (INT32 i = 0; i < nInterleave; i++) {
 		ZetOpen(0);
@@ -827,7 +823,7 @@ static INT32 DrvFrame()
 		ZetClose();
 
 		ZetOpen(1);
-		BurnTimerUpdate((i + 1) * (nCyclesTotal[1] / nInterleave));
+		CPU_RUN_TIMER(1);
 		ZetClose();
 
 		if (use_mcu) {
@@ -837,12 +833,12 @@ static INT32 DrvFrame()
 		}
 	}
 
-	ZetOpen(1);
-	BurnTimerEndFrame(nCyclesTotal[1]);
+	nExtraCycles[0] = nCyclesDone[0] - nCyclesTotal[0];
+	nExtraCycles[2] = nCyclesDone[2] - nCyclesTotal[2];
+
 	if (pBurnSoundOut) {
 		BurnYM2203Update(pBurnSoundOut, nBurnSoundLen);
 	}
-	ZetClose();
 
 	return 0;
 }
@@ -869,13 +865,15 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 		SCAN_VAR(flipscreen_y);
 		SCAN_VAR(DrvNmiEnable);
 		SCAN_VAR(pending_nmi);
+
+		SCAN_VAR(nExtraCycles);
 	}
 
 	return 0;
 }
 
 
-// The Legend of Kage
+// The Legend of Kage (rev 2)
 
 static struct BurnRomInfo lkageRomDesc[] = {
 	{ "a54-01-2.37",		0x8000, 0x60fd9734, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
@@ -905,7 +903,7 @@ STD_ROM_FN(lkage)
 
 struct BurnDriver BurnDrvLkage = {
 	"lkage", NULL, NULL, NULL, "1984",
-	"The Legend of Kage\0", NULL, "Taito Corporation", "Miscellaneous",
+	"The Legend of Kage (rev 2)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
 	NULL, lkageRomInfo, lkageRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
@@ -914,9 +912,9 @@ struct BurnDriver BurnDrvLkage = {
 };
 
 
-// The Legend of Kage (older)
+// The Legend of Kage (rev 1)
 
-static struct BurnRomInfo lkageoRomDesc[] = {
+static struct BurnRomInfo lkageaRomDesc[] = {
 	{ "a54-01-1.37",		0x8000, 0x973da9c5, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "a54-02-1.38",		0x8000, 0x27b509da, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -939,23 +937,23 @@ static struct BurnRomInfo lkageoRomDesc[] = {
 	{ "pal16l8a-a54-14.35",	0x0104, 0xa89c644e, 7 | BRF_OPT },       	 // 13
 };
 
-STD_ROM_PICK(lkageo)
-STD_ROM_FN(lkageo)
+STD_ROM_PICK(lkagea)
+STD_ROM_FN(lkagea)
 
-struct BurnDriver BurnDrvLkageo = {
-	"lkageo", "lkage", NULL, NULL, "1984",
-	"The Legend of Kage (older)\0", NULL, "Taito Corporation", "Miscellaneous",
+struct BurnDriver BurnDrvLkagea = {
+	"lkagea", "lkage", NULL, NULL, "1984",
+	"The Legend of Kage (rev 1)\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkageoRomInfo, lkageoRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	NULL, lkageaRomInfo, lkageaRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
 
 
-// The Legend of Kage (oldest)
+// The Legend of Kage
 
-static struct BurnRomInfo lkageooRomDesc[] = {
+static struct BurnRomInfo lkagebRomDesc[] = {
 	{ "a54-01.37",			0x8000, 0x34eab2c5, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "a54-02.38",			0x8000, 0xea471d8a, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -978,15 +976,15 @@ static struct BurnRomInfo lkageooRomDesc[] = {
 	{ "pal16l8a-a54-14.35", 0x0104, 0xa89c644e, 7 | BRF_OPT },  		 // 13
 };
 
-STD_ROM_PICK(lkageoo)
-STD_ROM_FN(lkageoo)
+STD_ROM_PICK(lkageb)
+STD_ROM_FN(lkageb)
 
-struct BurnDriver BurnDrvLkageoo = {
-	"lkageoo", "lkage", NULL, NULL, "1984",
-	"The Legend of Kage (oldest)\0", NULL, "Taito Corporation", "Miscellaneous",
+struct BurnDriver BurnDrvLkageb = {
+	"lkageb", "lkage", NULL, NULL, "1984",
+	"The Legend of Kage\0", NULL, "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkageooRomInfo, lkageooRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	NULL, lkagebRomInfo, lkagebRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
@@ -994,7 +992,7 @@ struct BurnDriver BurnDrvLkageoo = {
 
 // The Legend of Kage (bootleg set 1)
 
-static struct BurnRomInfo lkagebRomDesc[] = {
+static struct BurnRomInfo lkagebl1RomDesc[] = {
 	{ "ic37_1",		0x8000, 0x05694f7b, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "ic38_2",		0x8000, 0x22efe29e, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -1010,30 +1008,30 @@ static struct BurnRomInfo lkagebRomDesc[] = {
 	{ "a54-10.2",	0x0200, 0x17dfbd14, 5 | BRF_OPT },           //  8 Prom (unused)
 };
 
-STD_ROM_PICK(lkageb)
-STD_ROM_FN(lkageb)
+STD_ROM_PICK(lkagebl1)
+STD_ROM_FN(lkagebl1)
 
-static INT32 LkagebInit()
+static INT32 Lkagebl1Init()
 {
 	Lkageb = 1;
 
 	return DrvInit();
 }
 
-struct BurnDriver BurnDrvLkageb = {
-	"lkageb", "lkage", NULL, NULL, "1984",
+struct BurnDriver BurnDrvLkagebl1 = {
+	"lkagebl1", "lkage", NULL, NULL, "1984",
 	"The Legend of Kage (bootleg set 1)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkagebRomInfo, lkagebRomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
-	LkagebInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
+	NULL, lkagebl1RomInfo, lkagebl1RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	Lkagebl1Init, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
 
 
 // The Legend of Kage (bootleg set 2)
 
-static struct BurnRomInfo lkageb2RomDesc[] = {
+static struct BurnRomInfo lkagebl2RomDesc[] = {
 	{ "lok.a",		0x8000, 0x866df793, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "lok.b",		0x8000, 0xfba9400f, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -1049,15 +1047,15 @@ static struct BurnRomInfo lkageb2RomDesc[] = {
 	{ "a54-10.2",	0x0200, 0x17dfbd14, 5 | BRF_OPT },           //  8 Prom (unused)
 };
 
-STD_ROM_PICK(lkageb2)
-STD_ROM_FN(lkageb2)
+STD_ROM_PICK(lkagebl2)
+STD_ROM_FN(lkagebl2)
 
-struct BurnDriver BurnDrvLkageb2 = {
-	"lkageb2", "lkage", NULL, NULL, "1984",
+struct BurnDriver BurnDrvLkagebl2 = {
+	"lkagebl2", "lkage", NULL, NULL, "1984",
 	"The Legend of Kage (bootleg set 2)\0", NULL, "bootleg", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkageb2RomInfo, lkageb2RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	NULL, lkagebl2RomInfo, lkagebl2RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
@@ -1065,7 +1063,7 @@ struct BurnDriver BurnDrvLkageb2 = {
 
 // The Legend of Kage (bootleg set 3)
 
-static struct BurnRomInfo lkageb3RomDesc[] = {
+static struct BurnRomInfo lkagebl3RomDesc[] = {
 	{ "z1.bin",		0x8000, 0x60cac488, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "z2.bin",		0x8000, 0x22c95f17, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -1081,15 +1079,15 @@ static struct BurnRomInfo lkageb3RomDesc[] = {
 	{ "a54-10.2",	0x0200, 0x17dfbd14, 5 | BRF_OPT },           //  8 Prom (unused)
 };
 
-STD_ROM_PICK(lkageb3)
-STD_ROM_FN(lkageb3)
+STD_ROM_PICK(lkagebl3)
+STD_ROM_FN(lkagebl3)
 
-struct BurnDriver BurnDrvLkageb3 = {
-	"lkageb3", "lkage", NULL, NULL, "1984",
+struct BurnDriver BurnDrvLkagebl3 = {
+	"lkagebl3", "lkage", NULL, NULL, "1984",
 	"The Legend of Kage (bootleg set 3)\0", NULL, "bootleg", "hardware",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkageb3RomInfo, lkageb3RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	NULL, lkagebl3RomInfo, lkagebl3RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
@@ -1097,7 +1095,7 @@ struct BurnDriver BurnDrvLkageb3 = {
 
 // The Legend of Kage (bootleg set 4)
 
-static struct BurnRomInfo lkageb4RomDesc[] = {
+static struct BurnRomInfo lkagebl4RomDesc[] = {
 	{ "1.ic37",		0x8000, 0xfa20e863, 1 | BRF_PRG | BRF_ESS }, //  0 Z80 #0 Code
 	{ "2.ic38",		0x8000, 0xa5bdd3b4, 1 | BRF_PRG | BRF_ESS }, //  1
 
@@ -1113,15 +1111,15 @@ static struct BurnRomInfo lkageb4RomDesc[] = {
 	{ "a54-10.2",	0x0200, 0x17dfbd14, 5 | BRF_OPT },           //  8 Prom (unused)
 };
 
-STD_ROM_PICK(lkageb4)
-STD_ROM_FN(lkageb4)
+STD_ROM_PICK(lkagebl4)
+STD_ROM_FN(lkagebl4)
 
-struct BurnDriver BurnDrvLkageb4 = {
-	"lkageb4", "lkage", NULL, NULL, "1984",
+struct BurnDriver BurnDrvLkagebl4 = {
+	"lkagebl4", "lkage", NULL, NULL, "1984",
 	"The Legend of Kage (bootleg set 4)\0", NULL, "bootleg", "hardware",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_SCRFIGHT, 0,
-	NULL, lkageb4RomInfo, lkageb4RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
+	NULL, lkagebl4RomInfo, lkagebl4RomName, NULL, NULL, NULL, NULL, LkageInputInfo, LkageDIPInfo,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3
 };
@@ -1159,9 +1157,9 @@ static INT32 BygoneInit()
 
 struct BurnDriver BurnDrvBygone = {
 	"bygone", NULL, NULL, NULL, "1985",
-	"Bygone\0", "Imperfect sound", "Taito Corporation", "Miscellaneous",
+	"Bygone (prototype)\0", "Imperfect sound", "Taito Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
+	BDF_GAME_WORKING | BDF_PROTOTYPE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, bygoneRomInfo, bygoneRomName, NULL, NULL, NULL, NULL, LkageInputInfo, BygoneDIPInfo,
 	BygoneInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 224, 4, 3

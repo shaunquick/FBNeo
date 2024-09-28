@@ -1,4 +1,4 @@
-// FB Alpha Taito Qix driver module
+// FB Neo Taito Qix driver module
 // Based on MAME driver by Aaron Giles and Zsolt Vasvari
 
 #include "tiles_generic.h"
@@ -1250,7 +1250,7 @@ struct BurnDriver BurnDrvQix = {
 	"qix", NULL, NULL, NULL, "1981",
 	"Qix (Rev 2)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_PUZZLE, 0,
 	NULL, qixRomInfo, qixRomName, NULL, NULL, NULL, NULL, QixInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1287,7 +1287,7 @@ struct BurnDriver BurnDrvQixa = {
 	"qixa", "qix", NULL, NULL, "1981",
 	"Qix (set 2, smaller roms)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_PUZZLE, 0,
 	NULL, qixaRomInfo, qixaRomName, NULL, NULL, NULL, NULL, QixInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1317,7 +1317,7 @@ struct BurnDriver BurnDrvQixb = {
 	"qixb", "qix", NULL, NULL, "1981",
 	"Qix (set 2, larger roms)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_PUZZLE, 0,
 	NULL, qixbRomInfo, qixbRomName, NULL, NULL, NULL, NULL, QixInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1382,7 +1382,7 @@ struct BurnDriver BurnDrvQixo = {
 	"qixo", "qix", NULL, NULL, "1981",
 	"Qix (set 3, earlier)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_PUZZLE, 0,
 	NULL, qixoRomInfo, qixoRomName, NULL, NULL, NULL, NULL, QixInputInfo, NULL,
 	QixoInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1420,7 +1420,7 @@ struct BurnDriver BurnDrvQix2 = {
 	"qix2", "qix", NULL, NULL, "1981",
 	"Qix II (Tournament)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_PUZZLE, 0,
 	NULL, qix2RomInfo, qix2RomName, NULL, NULL, NULL, NULL, QixInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1462,7 +1462,7 @@ struct BurnDriver BurnDrvZookeep = {
 	"zookeep", NULL, NULL, NULL, "1982",
 	"Zoo Keeper (set 1)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
 	NULL, zookeepRomInfo, zookeepRomName, NULL, NULL, NULL, NULL, ZookeepInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1504,7 +1504,7 @@ struct BurnDriver BurnDrvZookeep2 = {
 	"zookeep2", "zookeep", NULL, NULL, "1982",
 	"Zoo Keeper (set 2)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
 	NULL, zookeep2RomInfo, zookeep2RomName, NULL, NULL, NULL, NULL, ZookeepInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1546,7 +1546,7 @@ struct BurnDriver BurnDrvZookeep3 = {
 	"zookeep3", "zookeep", NULL, NULL, "1982",
 	"Zoo Keeper (set 3)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
 	NULL, zookeep3RomInfo, zookeep3RomName, NULL, NULL, NULL, NULL, ZookeepInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
@@ -1583,7 +1583,7 @@ struct BurnDriver BurnDrvSdungeon = {
 	"sdungeon", NULL, NULL, NULL, "1981",
 	"Space Dungeon\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 4, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_MAZE, 0,
 	NULL, sdungeonRomInfo, sdungeonRomName, NULL, NULL, NULL, NULL, SdungeonInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1613,14 +1613,14 @@ struct BurnDriver BurnDrvSdungeona = {
 	"sdungeona", "sdungeon", NULL, NULL, "1981",
 	"Space Dungeon (larger roms)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 4, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION | GBF_MAZE, 0,
 	NULL, sdungeonaRomInfo, sdungeonaRomName, NULL, NULL, NULL, NULL, SdungeonInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
 };
 
 
-// The Electric Yo-Yo (set 1)
+// Electric Yo-Yo, The (rev 1)
 
 static struct BurnRomInfo elecyoyoRomDesc[] = {
 	{ "yy14",			0x1000, 0x0d2edcb9, 1 | BRF_PRG | BRF_ESS }, //  0 Main M6809 Code
@@ -1647,18 +1647,18 @@ STD_ROM_FN(elecyoyo)
 
 struct BurnDriver BurnDrvElecyoyo = {
 	"elecyoyo", NULL, NULL, NULL, "1982",
-	"The Electric Yo-Yo (set 1)\0", NULL, "Taito America Corporation", "Miscellaneous",
+	"The Electric Yo-Yo (rev 1)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
 	NULL, elecyoyoRomInfo, elecyoyoRomName, NULL, NULL, NULL, NULL, ElecyoyoInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
 };
 
 
-// The Electric Yo-Yo (set 2)
+// The Electric Yo-Yo
 
-static struct BurnRomInfo elecyoyo2RomDesc[] = {
+static struct BurnRomInfo elecyoyoaRomDesc[] = {
 	{ "yy14",			0x1000, 0x0d2edcb9, 1 | BRF_PRG | BRF_ESS }, //  0 Main M6809 Code
 	{ "yy15",			0x1000, 0xa91f01e3, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "yy16",			0x1000, 0xcab19f3a, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1678,21 +1678,21 @@ static struct BurnRomInfo elecyoyo2RomDesc[] = {
 	{ "yy101",			0x0800, 0x3cf13038, 4 | BRF_PRG | BRF_ESS }, // 13 MCU (M68705) Code
 };
 
-STD_ROM_PICK(elecyoyo2)
-STD_ROM_FN(elecyoyo2)
+STD_ROM_PICK(elecyoyoa)
+STD_ROM_FN(elecyoyoa)
 
-struct BurnDriver BurnDrvElecyoyo2 = {
-	"elecyoyo2", "elecyoyo", NULL, NULL, "1982",
-	"The Electric Yo-Yo (set 2)\0", NULL, "Taito America Corporation", "Miscellaneous",
+struct BurnDriver BurnDrvElecyoyoa = {
+	"elecyoyoa", "elecyoyo", NULL, NULL, "1982",
+	"The Electric Yo-Yo\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
-	NULL, elecyoyo2RomInfo, elecyoyo2RomName, NULL, NULL, NULL, NULL, ElecyoyoInputInfo, NULL,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
+	NULL, elecyoyoaRomInfo, elecyoyoaRomName, NULL, NULL, NULL, NULL, ElecyoyoInputInfo, NULL,
 	FourWayInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
 };
 
 
-// Kram (set 1)
+// Kram (rev 1)
 
 static struct BurnRomInfo kramRomDesc[] = {
 	{ "ks14-1",			0x1000, 0xfe69ac79, 1 | BRF_PRG | BRF_ESS }, //  0 Main M6809 Code
@@ -1719,18 +1719,18 @@ STD_ROM_FN(kram)
 
 struct BurnDriver BurnDrvKram = {
 	"kram", NULL, NULL, NULL, "1982",
-	"Kram (set 1)\0", NULL, "Taito America Corporation", "Miscellaneous",
+	"Kram (rev 1)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
 	NULL, kramRomInfo, kramRomName, NULL, NULL, NULL, NULL, KramInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
 };
 
 
-// Kram (set 2)
+// Kram
 
-static struct BurnRomInfo kram2RomDesc[] = {
+static struct BurnRomInfo kramaRomDesc[] = {
 	{ "ks14",			0x1000, 0xa2eac1ff, 1 | BRF_PRG | BRF_ESS }, //  0 Main M6809 Code
 	{ "ks15",			0x1000, 0x4b2c175e, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "ks16",			0x1000, 0x9500a05d, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1750,15 +1750,15 @@ static struct BurnRomInfo kram2RomDesc[] = {
 	{ "ks101.dat",		0x0800, 0xe53d97b7, 4 | BRF_PRG | BRF_ESS }, // 13 MCU (M68705) Code
 };
 
-STD_ROM_PICK(kram2)
-STD_ROM_FN(kram2)
+STD_ROM_PICK(krama)
+STD_ROM_FN(krama)
 
-struct BurnDriver BurnDrvKram2 = {
-	"kram2", "kram", NULL, NULL, "1982",
-	"Kram (set 2)\0", NULL, "Taito America Corporation", "Miscellaneous",
+struct BurnDriver BurnDrvKrama = {
+	"krama", "kram", NULL, NULL, "1982",
+	"Kram\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
-	NULL, kram2RomInfo, kram2RomName, NULL, NULL, NULL, NULL, KramInputInfo, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
+	NULL, kramaRomInfo, kramaRomName, NULL, NULL, NULL, NULL, KramInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
 };
@@ -1766,7 +1766,7 @@ struct BurnDriver BurnDrvKram2 = {
 
 // Kram (encrypted)
 
-static struct BurnRomInfo kram3RomDesc[] = {
+static struct BurnRomInfo krameRomDesc[] = {
 	{ "kr-u14",			0x1000, 0x02c1bd1e, 1 | BRF_PRG | BRF_ESS }, //  0 Main M6809 Code
 	{ "kr-u15",			0x1000, 0x46b3ff33, 1 | BRF_PRG | BRF_ESS }, //  1
 	{ "kr-u16",			0x1000, 0xf202b9cf, 1 | BRF_PRG | BRF_ESS }, //  2
@@ -1784,15 +1784,15 @@ static struct BurnRomInfo kram3RomDesc[] = {
 	{ "ks27",			0x0800, 0xc46530c8, 3 | BRF_PRG | BRF_ESS }, // 12 Sound M6802 Code
 };
 
-STD_ROM_PICK(kram3)
-STD_ROM_FN(kram3)
+STD_ROM_PICK(krame)
+STD_ROM_FN(krame)
 
-struct BurnDriverX BurnDrvKram3 = {
-	"kram3", "kram", NULL, NULL, "1982",
+struct BurnDriverX BurnDrvKrame = {
+	"krame", "kram", NULL, NULL, "1982",
 	"Kram (encrypted)\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_NOT_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
-	NULL, kram3RomInfo, kram3RomName, NULL, NULL, NULL, NULL, KramInputInfo, NULL,
+	BDF_GAME_NOT_WORKING | BDF_CLONE, 2, HARDWARE_TAITO_MISC, GBF_ACTION, 0,
+	NULL, krameRomInfo, krameRomName, NULL, NULL, NULL, NULL, KramInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 240, 4, 3
 };
@@ -1826,7 +1826,7 @@ struct BurnDriver BurnDrvComplexx = {
 	"complexx", NULL, NULL, NULL, "1984",
 	"Complex X\0", NULL, "Taito America Corporation", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_PLATFORM, 0,
 	NULL, complexxRomInfo, complexxRomName, NULL, NULL, NULL, NULL, ComplexxInputInfo, NULL,
 	DrvInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	240, 256, 3, 4
@@ -1862,9 +1862,9 @@ static INT32 SlitherInit()
 
 struct BurnDriver BurnDrvSlither = {
 	"slither", NULL, NULL, NULL, "1982",
-	"Slither (set 1)\0", "Press 'P2 Start' to exit settings screen", "Century II", "Miscellaneous",
+	"Slither (set 1)\0", "Press 'P2 Start' to exit settings screen", "Century II (GDI license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
 	NULL, slitherRomInfo, slitherRomName, NULL, NULL, NULL, NULL, SlitherInputInfo, NULL,
 	SlitherInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 256, 3, 4
@@ -1893,9 +1893,9 @@ STD_ROM_FN(slithera)
 
 struct BurnDriver BurnDrvSlithera = {
 	"slithera", "slither", NULL, NULL, "1982",
-	"Slither (set 2)\0", "Press 'P2 Start' to exit settings screen", "Century II", "Miscellaneous",
+	"Slither (set 2)\0", "Press 'P2 Start' to exit settings screen", "Century II (GDI license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE | BDF_ORIENTATION_VERTICAL, 2, HARDWARE_TAITO_MISC, GBF_SHOOT, 0,
 	NULL, slitheraRomInfo, slitheraRomName, NULL, NULL, NULL, NULL, SlitherInputInfo, NULL,
 	SlitherInit, DrvExit, DrvFrame, DrvDraw, DrvScan, &DrvRecalc, 0x400,
 	256, 256, 3, 4

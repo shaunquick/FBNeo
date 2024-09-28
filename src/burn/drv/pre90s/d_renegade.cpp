@@ -1,4 +1,4 @@
-// FB Alpha Renegade driver module
+// FB Neo Renegade driver module
 // Based on MAME driver by Phil Stroffolino, Carlos A. Lozano, Rob Rosenbrock
 
 // todo: clean up this mess. -dink
@@ -17,7 +17,7 @@ static UINT8 DrvDip[2]        = {0, 0};
 static UINT8 DrvInput[3]      = {0x00, 0x00, 0x00};
 static UINT8 DrvReset         = 0;
 
-static UINT8 *Mem                 = NULL;
+static UINT8 *AllMem              = NULL;
 static UINT8 *MemEnd              = NULL;
 static UINT8 *RamStart            = NULL;
 static UINT8 *RamEnd              = NULL;
@@ -235,8 +235,8 @@ STD_ROM_PICK(Drvj)
 STD_ROM_FN(Drvj)
 
 static struct BurnRomInfo DrvubRomDesc[] = {
-	{ "na-5.ic52",     0x08000, 0xde7e7df4, BRF_ESS | BRF_PRG }, //  0	M6502 Program Code
-	{ "40.ic51",       0x08000, 0x3dbaac11, BRF_ESS | BRF_PRG }, //	 1  bootleg
+	{ "40.ic51",       0x08000, 0x3dbaac11, BRF_ESS | BRF_PRG }, //	 0	M6502 Program Code / bootleg
+	{ "na-5.ic52",     0x08000, 0xde7e7df4, BRF_ESS | BRF_PRG }, //  1
 	
 	{ "n0-5.ic13",     0x08000, 0x3587de3b, BRF_ESS | BRF_PRG }, //  2	M6809 Program Code
 	
@@ -271,7 +271,7 @@ STD_ROM_PICK(Drvub)
 STD_ROM_FN(Drvub)
 
 static struct BurnRomInfo DrvbRomDesc[] = {
-	{ "ta18-10.bin",   0x08000, 0xa90cf44a, BRF_ESS | BRF_PRG }, //  0	M6502 Program Code
+	{ "ta18-10.bin",   0x08000, 0xa90cf44a, BRF_ESS | BRF_PRG }, //  0	M6502 Program Code / bootleg
 	{ "ta18-11.bin",   0x08000, 0xf240f5cd, BRF_ESS | BRF_PRG }, //	 1
 	
 	{ "n0-5.bin",      0x08000, 0x3587de3b, BRF_ESS | BRF_PRG }, //  2	M6809 Program Code
@@ -308,7 +308,7 @@ STD_ROM_FN(Drvb)
 
 static INT32 MemIndex()
 {
-	UINT8 *Next; Next = Mem;
+	UINT8 *Next; Next = AllMem;
 
 	DrvM6502Rom            = Next; Next += 0x10000;
 	DrvM6809Rom            = Next; Next += 0x08000;
@@ -701,14 +701,9 @@ static void DrvMSM5205Int()
 
 static INT32 DrvInit(INT32 nMcuType)
 {
-	INT32 nRet = 0, nLen;
+	INT32 nRet = 0;
 
-	Mem = NULL;
-	MemIndex();
-	nLen = MemEnd - (UINT8 *)0;
-	if ((Mem = (UINT8 *)BurnMalloc(nLen)) == NULL) return 1;
-	memset(Mem, 0, nLen);
-	MemIndex();
+	BurnAllocMemIndex();
 
 	DrvTempRom = (UINT8 *)BurnMalloc(0x60000);
 
@@ -814,7 +809,7 @@ static INT32 DrvInit(INT32 nMcuType)
 	}
 	
 	BurnYM3526Init(3000000, &DrvFMIRQHandler, 0);
-	BurnTimerAttachYM3526(&M6809Config, 1500000);
+	BurnTimerAttach(&M6809Config, 1500000);
 	BurnYM3526SetRoute(BURN_SND_YM3526_ROUTE, 1.00, BURN_SND_ROUTE_BOTH);
 	
 	GenericTilesInit();
@@ -845,7 +840,7 @@ static INT32 DrvExit()
 	
 	GenericTilesExit();
 	
-	BurnFree(Mem);
+	BurnFreeMemIndex();
 	
 	DisableMCUEmulation = 0;
 	
@@ -1031,56 +1026,44 @@ static INT32 DrvDraw()
 static INT32 DrvFrame()
 {
 	INT32 nInterleave = MSM5205CalcInterleave(0, 12000000 / 8);
-	
+
 	if (DrvReset) DrvDoReset();
 
 	DrvMakeInputs();
 
 	INT32 nCyclesTotal[3] = { (12000000 / 8) / 60, (12000000 / 8) / 60, (12000000 / 4) / 60 };
 	INT32 nCyclesDone[3] = { 0, 0, 0 };
-	INT32 nCyclesSegment;
-	
+
 	DrvVBlank = 0;
-	
+
 	M6502NewFrame();
 	M6809NewFrame();
 
 	for (INT32 i = 0; i < nInterleave; i++) {
-		INT32 nCurrentCPU, nNext;
-		
 		M6502Open(0);
-		nCurrentCPU = 0;
-		nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-		nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-		nCyclesDone[nCurrentCPU] += M6502Run(nCyclesSegment);
+		CPU_RUN(0, M6502);
 		if (i == ((nInterleave / 10) * 7)) DrvVBlank = 1;
 		if (i ==  (nInterleave / 2)) M6502SetIRQLine(M6502_INPUT_LINE_NMI, CPU_IRQSTATUS_AUTO);
 		if (i == ((nInterleave / 10) * 9)) M6502SetIRQLine(M6502_IRQ_LINE, CPU_IRQSTATUS_HOLD);
 		M6502Close();
-		
+
 		if (!DisableMCUEmulation) {
 			m6805Open(0);
-			nCurrentCPU = 2;
-			nNext = (i + 1) * nCyclesTotal[nCurrentCPU] / nInterleave;
-			nCyclesSegment = nNext - nCyclesDone[nCurrentCPU];
-			nCyclesDone[nCurrentCPU] += m6805Run(nCyclesSegment);
+			CPU_RUN(2, m6805);
 			m6805Close();
 		}
-		
+
 		M6809Open(0);
-		BurnTimerUpdateYM3526((i + 1) * (nCyclesTotal[1] / nInterleave));
+		CPU_RUN_TIMER(1);
 		MSM5205Update();
 		M6809Close();
 	}
-	
-	M6809Open(0);
-	BurnTimerEndFrameYM3526(nCyclesTotal[1]);
+
 	if (pBurnSoundOut) {
 		BurnYM3526Update(pBurnSoundOut, nBurnSoundLen);
 		MSM5205Render(0, pBurnSoundOut, nBurnSoundLen);
 	}
-	M6809Close();
-	
+
 	if (pBurnDraw) DrvDraw();
 
 	return 0;
@@ -1142,7 +1125,7 @@ static INT32 DrvScan(INT32 nAction, INT32 *pnMin)
 
 struct BurnDriver BurnDrvRenegade = {
 	"renegade", NULL, NULL, NULL, "1986",
-	"Renegade (US)\0", NULL, "Technos (Taito America license)", "Miscellaneous",
+	"Renegade (US)\0", NULL, "Technos Japan (Taito America license)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TECHNOS, GBF_SCRFIGHT, 0,
 	NULL, DrvRomInfo, DrvRomName, NULL, NULL, NULL, NULL, DrvInputInfo, DrvDIPInfo,
@@ -1152,8 +1135,8 @@ struct BurnDriver BurnDrvRenegade = {
 
 struct BurnDriver BurnDrvKuniokun = {
 	"kuniokun", "renegade", NULL, NULL, "1986",
-	"Nekketsu Kouha Kunio-kun (Japan)\0", NULL, "Technos", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
+	"Nekketsu Kouha Kunio-kun (Japan)\0", NULL, "Technos Japan", "Miscellaneous",
+	L"\u71b1\u8840\u786c\u6d3e\u304f\u306b\u304a\u304f\u3093\0Nekketsu Kouha Kunio-kun (Japan)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TECHNOS, GBF_SCRFIGHT, 0,
 	NULL, DrvjRomInfo, DrvjRomName, NULL, NULL, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	RenegadeInit, DrvExit, DrvFrame, DrvDraw, DrvScan,
@@ -1173,7 +1156,7 @@ struct BurnDriver BurnDrvRenegadeb = {
 struct BurnDriver BurnDrvKuniokunb = {
 	"kuniokunb", "renegade", NULL, NULL, "1986",
 	"Nekketsu Kouha Kunio-kun (Japan bootleg)\0", NULL, "bootleg", "Miscellaneous",
-	NULL, NULL, NULL, NULL,
+	L"\u71b1\u8840\u786c\u6d3e\u304f\u306b\u304a\u304f\u3093\0Nekketsu Kouha Kunio-kun (Japan bootleg)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_TECHNOS, GBF_SCRFIGHT, 0,
 	NULL, DrvbRomInfo, DrvbRomName, NULL, NULL, NULL, NULL, DrvInputInfo, DrvDIPInfo,
 	KuniokunbInit, DrvExit, DrvFrame, DrvDraw, DrvScan,

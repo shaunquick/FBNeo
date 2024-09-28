@@ -6,6 +6,7 @@
 // Snow Bros. 2
 
 static UINT8 DrvButton[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+static UINT8 DrvButtonF[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // fake inputs to make symmetric coin
 static UINT8 DrvJoy1[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy2[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 static UINT8 DrvJoy3[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -21,10 +22,11 @@ static INT32 nColCount = 0x0800;
 
 static UINT8 DrvReset = 0;
 
+static HoldCoin<2> hold_coin;
+
 static struct BurnInputInfo snowbro2InputList[] = {
 	{"P1 Coin",		BIT_DIGITAL,	DrvButton + 3,	"p1 coin"},
 	{"P1 Start",	BIT_DIGITAL,	DrvButton + 5,	"p1 start"},
-
 	{"P1 Up",		BIT_DIGITAL,	DrvJoy1 + 0,	"p1 up"},
 	{"P1 Down",		BIT_DIGITAL,	DrvJoy1 + 1,	"p1 down"},
 	{"P1 Left",		BIT_DIGITAL,	DrvJoy1 + 2,	"p1 left"},
@@ -34,7 +36,6 @@ static struct BurnInputInfo snowbro2InputList[] = {
 
 	{"P2 Coin",		BIT_DIGITAL,	DrvButton + 4,	"p2 coin"},
 	{"P2 Start",	BIT_DIGITAL,	DrvButton + 6,	"p2 start"},
-
 	{"P2 Up",		BIT_DIGITAL,	DrvJoy2 + 0,	"p2 up"},
 	{"P2 Down",		BIT_DIGITAL,	DrvJoy2 + 1,	"p2 down"},
 	{"P2 Left",		BIT_DIGITAL,	DrvJoy2 + 2,	"p2 left"},
@@ -42,8 +43,8 @@ static struct BurnInputInfo snowbro2InputList[] = {
 	{"P2 Button 1",	BIT_DIGITAL,	DrvJoy2 + 4,	"p2 fire 1"},
 	{"P2 Button 2",	BIT_DIGITAL,	DrvJoy2 + 5,	"p2 fire 2"},
 
+	{"P3 Coin",		BIT_DIGITAL,	DrvButtonF + 3,	"p3 coin"},
 	{"P3 Start",	BIT_DIGITAL,	DrvJoy3 + 6,	"p3 start"},
-
 	{"P3 Up",		BIT_DIGITAL,	DrvJoy3 + 0,	"p3 up"},
 	{"P3 Down",		BIT_DIGITAL,	DrvJoy3 + 1,	"p3 down"},
 	{"P3 Left",		BIT_DIGITAL,	DrvJoy3 + 2,	"p3 left"},
@@ -51,8 +52,8 @@ static struct BurnInputInfo snowbro2InputList[] = {
 	{"P3 Button 1",	BIT_DIGITAL,	DrvJoy3 + 4,	"p3 fire 1"},
 	{"P3 Button 2",	BIT_DIGITAL,	DrvJoy3 + 5,	"p3 fire 2"},
 
+	{"P4 Coin",		BIT_DIGITAL,	DrvButtonF + 4,	"p4 coin"},
 	{"P4 Start",	BIT_DIGITAL,	DrvJoy4 + 6,	"p4 start"},
-
 	{"P4 Up",		BIT_DIGITAL,	DrvJoy4 + 0,	"p4 up"},
 	{"P4 Down",		BIT_DIGITAL,	DrvJoy4 + 1,	"p4 down"},
 	{"P4 Left",		BIT_DIGITAL,	DrvJoy4 + 2,	"p4 left"},
@@ -71,7 +72,7 @@ STDINPUTINFO(snowbro2)
 
 static struct BurnDIPInfo snowbro2DIPList[] = 
 {
-	DIP_OFFSET(0x20)
+	DIP_OFFSET(0x22)
 
 	// Defaults
 	{0x00,	0xFF, 0xFF,	0x00, NULL},
@@ -339,6 +340,8 @@ static INT32 DrvDoReset()
 	MSM6295Reset(0);
 	BurnYM2151Reset();
 
+	hold_coin.reset();
+
 	HiscoreReset();
 
 	return 0;
@@ -370,6 +373,10 @@ static INT32 DrvFrame()
 	DrvInput[2] = 0x00;													// Player 2
 	DrvInput[6] = 0x00;
 	DrvInput[7] = 0x00;
+
+	DrvButton[3] |= DrvButtonF[3]; // p3,p4 coin clone buttons
+	DrvButton[4] |= DrvButtonF[4];
+
 	for (INT32 i = 0; i < 8; i++) {
 		DrvInput[0] |= (DrvJoy1[i] & 1) << i;
 		DrvInput[1] |= (DrvJoy2[i] & 1) << i;
@@ -381,6 +388,9 @@ static INT32 DrvFrame()
 	ToaClearOpposites(&DrvInput[1]);
 	ToaClearOpposites(&DrvInput[6]);
 	ToaClearOpposites(&DrvInput[7]);
+
+	hold_coin.check(0, DrvInput[2], 1 << 3, 1);
+	hold_coin.check(1, DrvInput[2], 1 << 4, 1);
 
 	SekNewFrame();
 
@@ -498,6 +508,8 @@ static INT32 DrvScan(INT32 nAction,INT32 *pnMin)
 		ToaScanGP9001(nAction, pnMin);
 
 		SCAN_VAR(DrvInput);
+
+		hold_coin.scan();
 	}
 	return 0;
 }
@@ -605,7 +617,7 @@ static INT32 Snowbro2Init()
 
 struct BurnDriver BurnDrvSnowbro2 = {
 	"snowbro2", NULL, NULL, NULL, "1994",
-	"Snow Bros. 2 - with new elves (Hanafram)\0", NULL, "[Toaplan] Hanafram", "Toaplan GP9001 based",
+	"Snow Bros. 2 - With New Elves / Otenki Paradise (Hanafram)\0", NULL, "Hanafram", "Toaplan GP9001 based",
 	L"Snow Bros. 2 - with new elves\0\u304A\u3066\u3093\u304D\u30D1\u30E9\u30C0\u30A4\u30B9\0\u96EA\u4EBA\u5144\u5F1F\uFF12\0\uB208\uC0AC\uB78C\uD615\uC81C\uFF12 (Hanafram)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 4, HARDWARE_TOAPLAN_68K_ONLY, GBF_PLATFORM, 0,
 	NULL, snowbro2RomInfo, snowbro2RomName, NULL, NULL, NULL, NULL, snowbro2InputInfo, snowbro2DIPInfo,
@@ -638,7 +650,7 @@ STD_ROM_FN(snowbro2ny)
 
 struct BurnDriver BurnDrvSnowbro2ny = {
 	"snowbro2ny", "snowbro2", NULL, NULL, "1994",
-	"Snow Bros. 2 - with new elves (Nyanko)\0", NULL, "[Toaplan] Nyanko", "Toaplan GP9001 based",
+	"Snow Bros. 2 - With New Elves / Otenki Paradise (Nyanko)\0", NULL, "Nyanko", "Toaplan GP9001 based",
 	L"Snow Bros. 2 - with new elves\0\u304A\u3066\u3093\u304D\u30D1\u30E9\u30C0\u30A4\u30B9\0\u96EA\u4EBA\u5144\u5F1F\uFF12\0\uB208\uC0AC\uB78C\uD615\uC81C\uFF12 (Nyanko)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 4, HARDWARE_TOAPLAN_68K_ONLY, GBF_PLATFORM, 0,
 	NULL, snowbro2nyRomInfo, snowbro2nyRomName, NULL, NULL, NULL, NULL, snowbro2InputInfo, snowbro2DIPInfo,
